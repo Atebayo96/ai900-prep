@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-900 · Module d'apprentissage scientifique</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #f5f0e8;
+  --bg2: #ede8df;
+  --card: #faf7f2;
+  --dark: #1a1612;
+  --dark2: #2d2820;
+  --mid: #6b6255;
+  --muted: #9e9385;
+  --accent: #c84b2f;
+  --accent2: #e8853a;
+  --green: #2d7a4f;
+  --blue: #2563a8;
+  --purple: #7c3aed;
+  --border: rgba(26,22,18,0.1);
+  --border2: rgba(26,22,18,0.06);
+  --shadow: 0 2px 20px rgba(26,22,18,0.08);
+  --shadow2: 0 8px 40px rgba(26,22,18,0.12);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--dark);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  font-size: 15px;
+}
+
+/* NOISE TEXTURE */
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:0;
+  opacity:0.4;
+}
+
+/* NAV */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(245,240,232,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  gap: 8px;
+}
+.nav-logo {
+  font-family: 'Fraunces', serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-right: 16px;
+  white-space: nowrap;
+}
+.nav-tab {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  border: none;
+  background: none;
+  font-family: 'DM Sans', sans-serif;
+}
+.nav-tab:hover { color: var(--dark); background: var(--bg2); }
+.nav-tab.active { color: var(--dark); background: var(--dark); color: var(--bg); }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.xp-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  background: rgba(200,75,47,0.08);
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(200,75,47,0.2);
+}
+
+/* SCREENS */
+.screen { display: none; position: relative; z-index: 1; }
+.screen.active { display: block; }
+
+/* ===== DASHBOARD ===== */
+.dashboard { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+
+.dash-hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: end;
+  margin-bottom: 40px;
+}
+.dash-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--dark);
+}
+.dash-title em { font-style: italic; color: var(--accent); }
+.dash-sub { font-size: 0.95rem; color: var(--mid); margin-top: 8px; line-height: 1.6; max-width: 500px; }
+
+/* SCIENCE BANNER */
+.science-banner {
+  background: var(--dark);
+  color: var(--bg);
+  padding: 20px 24px;
+  border-radius: 2px;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+.sb-icon { font-size: 1.5rem; margin-top: 2px; flex-shrink: 0; }
+.sb-title { font-family: 'Fraunces', serif; font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+.sb-desc { font-size: 0.82rem; color: rgba(245,240,232,0.6); line-height: 1.6; }
+.sb-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.sb-tag {
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.5px;
+  padding: 3px 10px;
+  border: 1px solid rgba(245,240,232,0.2);
+  color: rgba(245,240,232,0.7);
+  border-radius: 20px;
+}
+
+/* PROGRESS OVERVIEW */
+.progress-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-bottom: 32px;
+}
+.prog-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 16px 14px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.prog-card:hover { transform: translateY(-2px); box-shadow: var(--shadow2); }
+.prog-card::after {
+  content:'';
+  position:absolute;
+  bottom:0; left:0;
+  height: 3px;
+  width: var(--prog, 0%);
+  background: var(--accent);
+  transition: width 1s ease;
+}
+.prog-card.done::after { background: var(--green); }
+.prog-card.active-card::after { background: var(--accent2); }
+.pc-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+.pc-title {
+  font-family: 'Fraunces', serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+.pc-pct {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* TODAY BOX */
+.today-section { margin-bottom: 32px; }
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.today-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
+
+.today-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 20px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.today-card:hover { box-shadow: var(--shadow2); transform: translateY(-1px); }
+.today-card.primary { background: var(--dark); color: var(--bg); }
+.today-card.primary .tc-label { color: rgba(245,240,232,0.5); }
+.today-card.primary .tc-title { color: var(--bg); }
+.today-card.primary .tc-desc { color: rgba(245,240,232,0.6); }
+.tc-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tc-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.tc-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+.tc-desc { font-size: 0.82rem; color: var(--mid); line-height: 1.5; }
+.tc-action {
+  margin-top: 14px;
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+}
+.today-card.primary .tc-action { color: var(--accent2); }
+
+/* METHODS STRIP */
+.methods-strip {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-bottom: 32px;
+}
+.method-chip {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 12px 10px;
+  text-align: center;
+  border-radius: 2px;
+}
+.mc-icon { font-size: 1.2rem; margin-bottom: 4px; }
+.mc-name { font-size: 10px; font-weight: 600; color: var(--dark); margin-bottom: 2px; }
+.mc-eff {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--accent);
+}
+
+/* PLAN TABLE */
+.plan-table { width: 100%; border-collapse: collapse; }
+.plan-table th {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.plan-table td {
+  padding: 12px 12px;
+  border-bottom: 1px solid var(--border2);
+  font-size: 13px;
+  vertical-align: middle;
+}
+.plan-table tr:hover td { background: var(--bg2); }
+.day-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+.day-focus { font-weight: 500; }
+.day-method {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid;
+  font-family: 'DM Mono', monospace;
+}
+.dm-recall { border-color: var(--accent); color: var(--accent); background: rgba(200,75,47,0.06); }
+.dm-spaced { border-color: var(--blue); color: var(--blue); background: rgba(37,99,168,0.06); }
+.dm-feynman { border-color: var(--green); color: var(--green); background: rgba(45,122,79,0.06); }
+.dm-interleave { border-color: var(--purple); color: var(--purple); background: rgba(124,58,237,0.06); }
+.dm-exam { border-color: var(--accent2); color: var(--accent2); background: rgba(232,133,58,0.06); }
+.day-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+.done-check { color: var(--green); font-size: 14px; cursor: pointer; }
+.todo-check { color: var(--muted); font-size: 14px; cursor: pointer; }
+
+/* ===== STUDY SCREEN ===== */
+.study-wrap { max-width: 820px; margin: 0 auto; padding: 40px 24px; }
+
+.study-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.study-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+.method-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--dark);
+  color: var(--bg);
+  padding: 8px 16px;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 1px;
+}
+
+/* POMODORO */
+.pomodoro-bar {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  border-radius: 2px;
+}
+.pomo-timer {
+  font-family: 'DM Mono', monospace;
+  font-size: 1.8rem;
+  font-weight: 500;
+  color: var(--accent);
+  min-width: 70px;
+}
+.pomo-label {
+  font-size: 12px;
+  color: var(--mid);
+  flex: 1;
+}
+.pomo-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  padding: 7px 16px;
+  border: 1px solid var(--dark);
+  background: none;
+  color: var(--dark);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pomo-btn:hover { background: var(--dark); color: var(--bg); }
+.pomo-dots { display: flex; gap: 4px; }
+.pomo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+.pomo-dot.filled { background: var(--accent); }
+
+/* LESSON CONTENT */
+.lesson-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 32px;
+  margin-bottom: 16px;
+  border-radius: 2px;
+}
+.lesson-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.lesson-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  line-height: 1.3;
+}
+.lesson-body {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--dark2);
+}
+.lesson-body p { margin-bottom: 12px; }
+.lesson-body strong { color: var(--dark); font-weight: 600; }
+.lesson-body .highlight {
+  background: rgba(200,75,47,0.08);
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  margin: 16px 0;
+  font-size: 0.9rem;
+}
+.lesson-body .azure-box {
+  background: rgba(37,99,168,0.06);
+  border-left: 3px solid var(--blue);
+  padding: 12px 16px;
+  margin: 16px 0;
+  font-size: 0.9rem;
+}
+.lesson-body .azure-box strong { color: var(--blue); }
+
+/* DUAL CODING - visual diagram */
+.visual-diagram {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 20px;
+  margin: 16px 0;
+  text-align: center;
+  border-radius: 2px;
+}
+.diagram-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.diagram-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.df-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 2px;
+  text-align: center;
+  min-width: 90px;
+}
+.df-box.highlight { background: var(--dark); color: var(--bg); }
+.df-box.accent { border-color: var(--accent); color: var(--accent); }
+.df-box.blue { border-color: var(--blue); color: var(--blue); }
+.df-box.green { border-color: var(--green); color: var(--green); }
+.df-arrow { color: var(--muted); font-size: 16px; }
+
+/* ACTIVE RECALL SECTION */
+.recall-section {
+  background: var(--dark);
+  color: var(--bg);
+  padding: 24px;
+  margin-bottom: 16px;
+  border-radius: 2px;
+}
+.recall-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.recall-icon { font-size: 1.2rem; }
+.recall-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.recall-subtitle { font-size: 11px; color: rgba(245,240,232,0.5); margin-top: 2px; }
+.recall-questions { display: flex; flex-direction: column; gap: 10px; }
+.recall-q {
+  background: rgba(245,240,232,0.06);
+  border: 1px solid rgba(245,240,232,0.1);
+  padding: 14px 16px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.recall-q:hover { background: rgba(245,240,232,0.1); }
+.recall-q-text { font-size: 0.9rem; margin-bottom: 8px; }
+.recall-answer {
+  display: none;
+  font-size: 0.82rem;
+  color: rgba(245,240,232,0.6);
+  line-height: 1.6;
+  padding-top: 8px;
+  border-top: 1px solid rgba(245,240,232,0.1);
+  margin-top: 8px;
+}
+.recall-q.open .recall-answer { display: block; }
+.recall-reveal {
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: var(--accent2);
+  letter-spacing: 1px;
+}
+
+/* FEYNMAN */
+.feynman-box {
+  background: rgba(45,122,79,0.06);
+  border: 1px solid rgba(45,122,79,0.2);
+  padding: 20px;
+  margin-bottom: 16px;
+  border-radius: 2px;
+}
+.feynman-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.feynman-title {
+  font-family: 'Fraunces', serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--green);
+}
+.feynman-prompt {
+  font-size: 0.88rem;
+  color: var(--mid);
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+textarea.feynman-input {
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  color: var(--dark);
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+  border-radius: 2px;
+  transition: border-color 0.15s;
+}
+textarea.feynman-input:focus { border-color: var(--green); }
+
+/* SPACED REP CARDS */
+.flashcard-wrap {
+  perspective: 1000px;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+.flashcard {
+  width: 100%;
+  min-height: 160px;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.5s;
+}
+.flashcard.flipped { transform: rotateX(180deg); }
+.fc-front, .fc-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-radius: 2px;
+}
+.fc-back {
+  transform: rotateX(180deg);
+  border-color: var(--accent);
+  background: rgba(200,75,47,0.03);
+}
+.fc-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.fc-text {
+  font-family: 'Fraunces', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--dark);
+}
+.fc-back .fc-text {
+  font-size: 0.9rem;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+  color: var(--dark2);
+  line-height: 1.7;
+}
+.fc-hint { font-size: 11px; color: var(--muted); margin-top: 12px; }
+.sr-buttons { display: flex; gap: 8px; margin-top: 12px; }
+.sr-btn {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid;
+  background: none;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border-radius: 2px;
+}
+.sr-btn.hard { border-color: var(--accent); color: var(--accent); }
+.sr-btn.hard:hover { background: var(--accent); color: #fff; }
+.sr-btn.ok { border-color: var(--accent2); color: var(--accent2); }
+.sr-btn.ok:hover { background: var(--accent2); color: #fff; }
+.sr-btn.easy { border-color: var(--green); color: var(--green); }
+.sr-btn.easy:hover { background: var(--green); color: #fff; }
+
+/* LESSON NAV */
+.lesson-nav { display: flex; gap: 10px; margin-top: 20px; }
+.ln-btn {
+  flex: 1;
+  padding: 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--dark);
+  text-align: center;
+}
+.ln-btn.primary { background: var(--dark); color: var(--bg); border-color: var(--dark); }
+.ln-btn:hover:not(.primary) { border-color: var(--dark); }
+
+/* ===== FLASHCARDS SCREEN ===== */
+.fc-screen { max-width: 680px; margin: 0 auto; padding: 40px 24px; }
+.fc-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 28px; }
+.fcs-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 14px;
+  text-align: center;
+  border-radius: 2px;
+}
+.fcs-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--accent);
+}
+.fcs-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ===== EXAM SCREEN ===== */
+.exam-screen { max-width: 720px; margin: 0 auto; padding: 40px 24px; }
+.exam-info {
+  background: var(--dark);
+  color: var(--bg);
+  padding: 24px;
+  margin-bottom: 24px;
+  border-radius: 2px;
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 16px;
+  text-align: center;
+}
+.ei-num {
+  font-family: 'Fraunces', serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent2);
+}
+.ei-label { font-size: 11px; color: rgba(245,240,232,0.5); margin-top: 2px; }
+
+.exam-q {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 28px;
+  margin-bottom: 16px;
+  border-radius: 2px;
+}
+.eq-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.eq-num { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); letter-spacing:1px; }
+.eq-domain {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--blue);
+  color: var(--blue);
+  font-family: 'DM Mono', monospace;
+}
+.eq-text { font-size: 0.95rem; font-weight: 500; margin-bottom: 16px; line-height: 1.5; }
+.eq-opts { display: flex; flex-direction: column; gap: 8px; }
+.eq-opt {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 11px 16px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  text-align: left;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  transition: all 0.12s;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--dark);
+  line-height: 1.5;
+  border-radius: 2px;
+}
+.eq-opt:hover:not(:disabled) { border-color: var(--dark); background: var(--bg2); }
+.eq-opt .ol { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); min-width:14px; margin-top:2px; }
+.eq-opt.correct { border-color: var(--green); background: rgba(45,122,79,0.05); }
+.eq-opt.wrong { border-color: var(--accent); background: rgba(200,75,47,0.05); }
+.eq-opt.show-c { border-color: var(--green); }
+.eq-feedback {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  padding: 10px 14px;
+  border-left: 2px solid;
+  margin-top: 10px;
+  display: none;
+  color: var(--mid);
+}
+.eq-feedback.ok { border-color: var(--green); display: block; }
+.eq-feedback.ko { border-color: var(--accent); display: block; }
+.btn-exam-next {
+  width: 100%;
+  padding: 14px;
+  background: var(--dark);
+  color: var(--bg);
+  border: none;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.15s;
+  display: none;
+  border-radius: 2px;
+}
+.btn-exam-next.vis { display: block; }
+.btn-exam-next:hover { background: var(--accent); }
+
+/* RESULTS */
+.exam-result {
+  text-align: center;
+  padding: 40px 20px;
+  display: none;
+}
+.er-score {
+  font-family: 'Fraunces', serif;
+  font-size: 5rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+.er-pct { font-family:'DM Mono',monospace; font-size:1rem; color:var(--muted); margin:4px 0 16px; }
+.er-msg { font-size:1rem; color:var(--dark); margin-bottom:24px; line-height:1.6; max-width:400px; margin:0 auto 24px; }
+.er-verdict {
+  font-family: 'Fraunces', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.btn-retry {
+  padding: 12px 32px;
+  background: var(--dark);
+  color: var(--bg);
+  border: none;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border-radius: 2px;
+}
+.btn-retry:hover { background: var(--accent); }
+
+/* ANIMATIONS */
+@keyframes slideIn {
+  from { opacity:0; transform:translateY(12px); }
+  to { opacity:1; transform:translateY(0); }
+}
+.screen.active { animation: slideIn 0.3s ease; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .progress-grid { grid-template-columns: repeat(3,1fr); }
+  .today-grid { grid-template-columns: 1fr; }
+  .methods-strip { grid-template-columns: repeat(3,1fr); }
+  .exam-info { grid-template-columns: repeat(2,1fr); }
+  .fc-stats { grid-template-columns: repeat(2,1fr); }
+  .diagram-flow { gap: 4px; }
+  .df-box { min-width: 70px; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">AI-900 ◆</div>
+  <button class="nav-tab active" onclick="showScreen('dashboard', this)">Dashboard</button>
+  <button class="nav-tab" onclick="showScreen('study', this)">Leçons</button>
+  <button class="nav-tab" onclick="showScreen('flashcards', this)">Flashcards</button>
+  <button class="nav-tab" onclick="showScreen('exam', this)">Examen blanc</button>
+  <div class="nav-right">
+    <span class="xp-badge" id="xpBadge">0 XP</span>
+  </div>
+</nav>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="screen active" id="screen-dashboard">
+<div class="dashboard">
+
+  <div class="dash-hero">
+    <div>
+      <div class="dash-title">Prépare ton<br><em>AI-900</em><br>scientifiquement.</div>
+      <div class="dash-sub">6 techniques validées par la recherche cognitive. Un plan structuré sur 10 jours. Zéro passivité.</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:4px;">SCORE EXAM CIBLE</div>
+      <div style="font-family:'Fraunces',serif;font-size:3rem;font-weight:700;color:var(--accent);line-height:1;">700<span style="font-size:1.2rem;color:var(--muted)">/1000</span></div>
+    </div>
+  </div>
+
+  <!-- SCIENCE BANNER -->
+  <div class="science-banner">
+    <div class="sb-icon">🧠</div>
+    <div>
+      <div class="sb-title">Méthodes basées sur la science cognitive (Dunlosky et al., 2013)</div>
+      <div class="sb-desc">Ce module intègre les 6 techniques à haute efficacité prouvée. La répétition espacée améliore la rétention de +200%. Le rappel actif surpasse la relecture passive de 50%. L'interleaving améliore les performances en conditions d'examen de +43%.</div>
+      <div class="sb-tags">
+        <span class="sb-tag">Répétition espacée</span>
+        <span class="sb-tag">Rappel actif</span>
+        <span class="sb-tag">Interleaving</span>
+        <span class="sb-tag">Technique Feynman</span>
+        <span class="sb-tag">Pomodoro</span>
+        <span class="sb-tag">Dual Coding</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROGRESS OVERVIEW -->
+  <div class="section-label">Progression — 6 domaines AI-900</div>
+  <div class="progress-grid">
+    <div class="prog-card" style="--prog:85%" onclick="loadLesson(0)">
+      <div class="pc-num">01 · 20%</div>
+      <div class="pc-title">Concepts IA & IA Responsable</div>
+      <div class="pc-pct">85%</div>
+    </div>
+    <div class="prog-card active-card" style="--prog:60%" onclick="loadLesson(1)">
+      <div class="pc-num">02 · 25%</div>
+      <div class="pc-title">Machine Learning sur Azure</div>
+      <div class="pc-pct">60%</div>
+    </div>
+    <div class="prog-card" style="--prog:40%" onclick="loadLesson(2)">
+      <div class="pc-num">03 · 15%</div>
+      <div class="pc-title">Computer Vision Azure</div>
+      <div class="pc-pct">40%</div>
+    </div>
+    <div class="prog-card" style="--prog:30%" onclick="loadLesson(3)">
+      <div class="pc-num">04 · 15%</div>
+      <div class="pc-title">NLP & Azure Language</div>
+      <div class="pc-pct">30%</div>
+    </div>
+    <div class="prog-card" style="--prog:20%" onclick="loadLesson(4)">
+      <div class="pc-num">05 · 15%</div>
+      <div class="pc-title">IA Générative & OpenAI</div>
+      <div class="pc-pct">20%</div>
+    </div>
+    <div class="prog-card" style="--prog:10%" onclick="loadLesson(5)">
+      <div class="pc-num">06 · 10%</div>
+      <div class="pc-title">Agents & Azure Foundry</div>
+      <div class="pc-pct">10%</div>
+    </div>
+  </div>
+
+  <!-- AUJOURD'HUI -->
+  <div class="today-section">
+    <div class="section-label">Aujourd'hui — Plan Pomodoro</div>
+    <div class="today-grid">
+      <div class="today-card primary" onclick="loadLesson(1)">
+        <div class="tc-label"><span class="tc-dot"></span>LEÇON DU JOUR · RAPPEL ACTIF</div>
+        <div class="tc-title">Machine Learning sur Azure</div>
+        <div class="tc-desc">Azure ML Studio, AutoML, Designer, endpoints de déploiement. 3 Pomodoros recommandés.</div>
+        <div class="tc-action">Commencer → 25 min</div>
+      </div>
+      <div class="today-card" onclick="showScreen('flashcards', document.querySelectorAll('.nav-tab')[2])">
+        <div class="tc-label">RÉVISION ESPACÉE</div>
+        <div class="tc-title">12 cartes dues</div>
+        <div class="tc-desc">Cartes en retard selon la courbe d'oubli d'Ebbinghaus.</div>
+        <div class="tc-action" style="color:var(--blue)">Réviser → 10 min</div>
+      </div>
+      <div class="today-card" onclick="showScreen('exam', document.querySelectorAll('.nav-tab')[3])">
+        <div class="tc-label">EXAMEN BLANC</div>
+        <div class="tc-title">Test rapide</div>
+        <div class="tc-desc">10 questions mixtes. Simule les conditions réelles.</div>
+        <div class="tc-action" style="color:var(--green)">Tester → 15 min</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MÉTHODES -->
+  <div class="section-label">Les 6 techniques intégrées dans ce module</div>
+  <div class="methods-strip">
+    <div class="method-chip">
+      <div class="mc-icon">🔁</div>
+      <div class="mc-name">Répétition espacée</div>
+      <div class="mc-eff">+200% rétention</div>
+    </div>
+    <div class="method-chip">
+      <div class="mc-icon">🎯</div>
+      <div class="mc-name">Rappel actif</div>
+      <div class="mc-eff">+50% vs relecture</div>
+    </div>
+    <div class="method-chip">
+      <div class="mc-icon">🔀</div>
+      <div class="mc-name">Interleaving</div>
+      <div class="mc-eff">+43% en exam</div>
+    </div>
+    <div class="method-chip">
+      <div class="mc-icon">🗣️</div>
+      <div class="mc-name">Feynman</div>
+      <div class="mc-eff">Compréhension profonde</div>
+    </div>
+    <div class="method-chip">
+      <div class="mc-icon">🍅</div>
+      <div class="mc-name">Pomodoro</div>
+      <div class="mc-eff">Focus optimal</div>
+    </div>
+    <div class="method-chip">
+      <div class="mc-icon">🖼️</div>
+      <div class="mc-name">Dual Coding</div>
+      <div class="mc-eff">2× traces mémoire</div>
+    </div>
+  </div>
+
+  <!-- PLAN 10 JOURS -->
+  <div class="section-label">Plan 10 jours — AI-900</div>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:2px;overflow:hidden;">
+    <table class="plan-table">
+      <thead>
+        <tr>
+          <th>Jour</th>
+          <th>Focus</th>
+          <th>Méthode</th>
+          <th>Durée</th>
+          <th>✓</th>
+        </tr>
+      </thead>
+      <tbody id="planBody"></tbody>
+    </table>
+  </div>
+
+</div>
+</div>
+
+<!-- ===== STUDY SCREEN ===== -->
+<div class="screen" id="screen-study">
+<div class="study-wrap">
+
+  <div class="study-header">
+    <div>
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;" id="lessonEyebrow">Leçon 2 / 6</div>
+      <div class="study-title" id="lessonTitle">Machine Learning sur Azure</div>
+    </div>
+    <div class="method-badge">🍅 POMODORO ACTIF</div>
+  </div>
+
+  <!-- POMODORO -->
+  <div class="pomodoro-bar">
+    <div class="pomo-timer" id="pomoTimer">25:00</div>
+    <div>
+      <div class="pomo-label">Session de focus — <strong>Étude active</strong></div>
+      <div class="pomo-dots">
+        <div class="pomo-dot" id="pd0"></div>
+        <div class="pomo-dot" id="pd1"></div>
+        <div class="pomo-dot" id="pd2"></div>
+        <div class="pomo-dot" id="pd3"></div>
+      </div>
+    </div>
+    <button class="pomo-btn" id="pomoBtn" onclick="togglePomodoro()">▶ START</button>
+    <button class="pomo-btn" onclick="resetPomodoro()">RESET</button>
+  </div>
+
+  <!-- LESSON CONTENT (dynamic) -->
+  <div id="lessonContent"></div>
+
+  <div class="lesson-nav">
+    <button class="ln-btn" onclick="prevLesson()">← LEÇON PRÉCÉDENTE</button>
+    <button class="ln-btn primary" onclick="nextLesson()">LEÇON SUIVANTE →</button>
+  </div>
+
+</div>
+</div>
+
+<!-- ===== FLASHCARDS ===== -->
+<div class="screen" id="screen-flashcards">
+<div class="fc-screen">
+  <div style="margin-bottom:24px;">
+    <div style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:700;margin-bottom:8px;">Répétition espacée</div>
+    <div style="font-size:0.88rem;color:var(--mid);line-height:1.6;">Basé sur la courbe d'oubli d'Ebbinghaus. Évalue ta difficulté après chaque carte pour optimiser les intervalles de révision.</div>
+  </div>
+
+  <div class="fc-stats">
+    <div class="fcs-card"><div class="fcs-num" id="fcTotal">0</div><div class="fcs-label">Cartes totales</div></div>
+    <div class="fcs-card"><div class="fcs-num" id="fcDue" style="color:var(--accent)">0</div><div class="fcs-label">À réviser</div></div>
+    <div class="fcs-card"><div class="fcs-num" id="fcLearned" style="color:var(--green)">0</div><div class="fcs-label">Maîtrisées</div></div>
+    <div class="fcs-card"><div class="fcs-num" id="fcStreak" style="color:var(--purple)">0</div><div class="fcs-label">Streak</div></div>
+  </div>
+
+  <!-- Filter buttons -->
+  <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+    <button class="sr-btn easy" style="flex:none;padding:6px 14px;" onclick="filterCards('all')">Toutes</button>
+    <button class="sr-btn hard" style="flex:none;padding:6px 14px;" onclick="filterCards('due')">À réviser</button>
+    <button class="sr-btn ok" style="flex:none;padding:6px 14px;" onclick="filterCards('ML')">ML</button>
+    <button class="sr-btn ok" style="flex:none;padding:6px 14px;" onclick="filterCards('Vision')">Vision</button>
+    <button class="sr-btn ok" style="flex:none;padding:6px 14px;" onclick="filterCards('NLP')">NLP</button>
+    <button class="sr-btn ok" style="flex:none;padding:6px 14px;" onclick="filterCards('GenAI')">GenAI</button>
+  </div>
+
+  <div id="flashcardArea"></div>
+
+  <div style="text-align:center;margin-top:12px;">
+    <button class="ln-btn" style="width:auto;padding:10px 24px;" onclick="nextFlashcard()">CARTE SUIVANTE →</button>
+  </div>
+</div>
+</div>
+
+<!-- ===== EXAM SCREEN ===== -->
+<div class="screen" id="screen-exam">
+<div class="exam-screen">
+
+  <div style="margin-bottom:24px;">
+    <div style="font-family:'Fraunces',serif;font-size:1.8rem;font-weight:700;margin-bottom:8px;">Examen blanc AI-900</div>
+    <div style="font-size:0.88rem;color:var(--mid);line-height:1.6;">Questions interleaved — mélange de tous les domaines. Simule les conditions réelles de l'examen Microsoft.</div>
+  </div>
+
+  <div class="exam-info">
+    <div><div class="ei-num" id="examQNum">1</div><div class="ei-label">Question</div></div>
+    <div><div class="ei-num" id="examTotal">20</div><div class="ei-label">Total</div></div>
+    <div><div class="ei-num" id="examScore">0</div><div class="ei-label">Score</div></div>
+    <div><div class="ei-num" id="examTimer" style="color:var(--green)">30:00</div><div class="ei-label">Temps</div></div>
+  </div>
+
+  <div id="examContent"></div>
+  <div class="exam-result" id="examResult"></div>
+
+</div>
+</div>
+
+<script>
+// ===================== DATA =====================
+
+const LESSONS = [
+  {
+    id: 0,
+    title: "Concepts IA & IA Responsable",
+    domain: "Domaine 1 · 20% de l'examen",
+    content: `
+      <div class="lesson-card">
+        <div class="lesson-eyebrow">📖 Leçon · Dual Coding activé</div>
+        <div class="lesson-title">Qu'est-ce que l'Intelligence Artificielle ?</div>
+        <div class="lesson-body">
+          <p>L'IA est la simulation de l'intelligence humaine par des machines. Elle englobe plusieurs sous-domaines dont le <strong>Machine Learning</strong>, le <strong>Deep Learning</strong>, et l'<strong>IA générative</strong>.</p>
+          <div class="highlight">
+            💡 <strong>Point clé examen :</strong> L'IA ne se limite pas au ML. Retiens la hiérarchie : IA → ML → Deep Learning → LLMs
+          </div>
+          <div class="visual-diagram">
+            <div class="diagram-title">HIÉRARCHIE IA — DUAL CODING</div>
+            <div class="diagram-flow">
+              <div class="df-box highlight">Intelligence Artificielle</div>
+              <div class="df-arrow">⊃</div>
+              <div class="df-box accent">Machine Learning</div>
+              <div class="df-arrow">⊃</div>
+              <div class="df-box blue">Deep Learning</div>
+              <div class="df-arrow">⊃</div>
+              <div class="df-box green">LLMs / GenAI</div>
+            </div>
+          </div>
+          <p>Les <strong>charges de travail IA courantes</strong> que Microsoft teste à l'examen :</p>
+          <p>• <strong>Vision par ordinateur</strong> — analyser images/vidéos<br>
+          • <strong>NLP</strong> — comprendre le langage naturel<br>
+          • <strong>Reconnaissance vocale</strong> — parole ↔ texte<br>
+          • <strong>IA décisionnelle</strong> — recommandations, détection anomalies<br>
+          • <strong>IA générative</strong> — créer du contenu nouveau</p>
+          <div class="azure-box">
+            <strong>🔵 Sur Azure :</strong> Azure AI Services regroupe toutes ces capacités via des APIs prêtes à l'emploi.
+          </div>
+        </div>
+      </div>
+      <div class="lesson-card">
+        <div class="lesson-eyebrow">🏛️ Les 6 principes d'IA Responsable Microsoft</div>
+        <div class="lesson-title">IA Responsable — CRITIQUE pour l'examen</div>
+        <div class="lesson-body">
+          <p>Microsoft définit <strong>6 principes</strong> fondamentaux. Tu dois les connaître par cœur :</p>
+          <div class="visual-diagram">
+            <div class="diagram-title">6 PRINCIPES — MÉMORISE CE SCHÉMA</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;">
+              <div class="df-box accent" style="padding:10px 8px;"><div style="font-size:1.2rem;">⚖️</div>Équité</div>
+              <div class="df-box blue" style="padding:10px 8px;"><div style="font-size:1.2rem;">🔒</div>Fiabilité & Sécurité</div>
+              <div class="df-box green" style="padding:10px 8px;"><div style="font-size:1.2rem;">🛡️</div>Confidentialité</div>
+              <div class="df-box" style="padding:10px 8px;border-color:var(--purple);color:var(--purple);"><div style="font-size:1.2rem;">🤝</div>Inclusion</div>
+              <div class="df-box" style="padding:10px 8px;border-color:var(--accent2);color:var(--accent2);"><div style="font-size:1.2rem;">👁️</div>Transparence</div>
+              <div class="df-box" style="padding:10px 8px;"><div style="font-size:1.2rem;">📋</div>Responsabilité</div>
+            </div>
+          </div>
+          <div class="highlight">⚡ <strong>Moyen mémo :</strong> <em>É-F-C-I-T-R</em> = Équité, Fiabilité, Confidentialité, Inclusion, Transparence, Responsabilité</div>
+        </div>
+      </div>`,
+    recallQs: [
+      { q: "Cite les 6 principes d'IA Responsable de Microsoft.", a: "Équité, Fiabilité & Sécurité, Confidentialité & Sécurité, Inclusion, Transparence, Responsabilité. Moyen mémo : É-F-C-I-T-R" },
+      { q: "Quelle est la hiérarchie IA → ML → Deep Learning → ?", a: "IA ⊃ Machine Learning ⊃ Deep Learning ⊃ LLMs / IA générative. Chaque niveau est un sous-ensemble plus spécialisé du précédent." },
+      { q: "Donne 3 exemples de charges de travail IA testées à l'AI-900.", a: "Vision par ordinateur (analyse d'images), NLP (traitement du langage), Reconnaissance vocale (parole→texte), IA générative (création de contenu), IA décisionnelle (détection d'anomalies)." }
+    ],
+    feynman: "Explique à quelqu'un qui n'a jamais entendu parler d'IA pourquoi les 6 principes d'IA Responsable existent. Utilise un exemple concret de ton quotidien."
+  },
+  {
+    id: 1,
+    title: "Machine Learning sur Azure",
+    domain: "Domaine 2 · 25% de l'examen",
+    content: `
+      <div class="lesson-card">
+        <div class="lesson-eyebrow">📖 Leçon · Domaine le plus important</div>
+        <div class="lesson-title">Les types d'apprentissage ML</div>
+        <div class="lesson-body">
+          <p>3 types d'apprentissage à maîtriser absolument :</p>
+          <div class="visual-diagram">
+            <div class="diagram-title">3 TYPES D'APPRENTISSAGE ML</div>
+            <div class="diagram-flow" style="flex-direction:column;gap:10px;">
+              <div style="display:flex;align-items:center;gap:12px;width:100%;">
+                <div class="df-box accent" style="width:130px;flex-shrink:0;">Supervisé</div>
+                <div style="text-align:left;font-size:12px;color:var(--mid);">Données <strong>étiquetées</strong> → Classification (spam/pas spam) + Régression (prédire un prix)</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;width:100%;">
+                <div class="df-box blue" style="width:130px;flex-shrink:0;">Non supervisé</div>
+                <div style="text-align:left;font-size:12px;color:var(--mid);">Pas d'étiquettes → Clustering (grouper des clients) + Détection d'anomalies</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;width:100%;">
+                <div class="df-box green" style="width:130px;flex-shrink:0;">Renforcement</div>
+                <div style="text-align:left;font-size:12px;color:var(--mid);">Agent + Récompenses → Jeux, robotique, optimisation</div>
+              </div>
+            </div>
+          </div>
+          <div class="highlight">⚡ <strong>Piège fréquent :</strong> La détection d'anomalies peut être supervisée OU non supervisée selon si on a des exemples d'anomalies.</div>
+        </div>
+      </div>
+      <div class="lesson-card">
+        <div class="lesson-eyebrow">🔵 Azure Machine Learning — Services clés</div>
+        <div class="lesson-title">Azure ML Studio & ses composants</div>
+        <div class="lesson-body">
+          <div class="visual-diagram">
+            <div class="diagram-title">AZURE ML STUDIO — ARCHITECTURE</div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;">
+              <div class="df-box highlight" style="padding:12px 8px;">
+                <div style="font-size:1rem;margin-bottom:4px;">🤖</div>
+                <div style="font-size:11px;font-weight:600;">AutoML</div>
+                <div style="font-size:10px;color:rgba(245,240,232,0.6);">Entraîne automatiquement plusieurs modèles et choisit le meilleur</div>
+              </div>
+              <div class="df-box" style="padding:12px 8px;border-color:var(--blue);color:var(--dark);">
+                <div style="font-size:1rem;margin-bottom:4px;">🎨</div>
+                <div style="font-size:11px;font-weight:600;">Designer</div>
+                <div style="font-size:10px;color:var(--mid);">Interface drag-and-drop pour créer des pipelines ML visuellement</div>
+              </div>
+              <div class="df-box" style="padding:12px 8px;border-color:var(--green);color:var(--dark);">
+                <div style="font-size:1rem;margin-bottom:4px;">💻</div>
+                <div style="font-size:11px;font-weight:600;">Notebooks</div>
+                <div style="font-size:10px;color:var(--mid);">Code Python/R pour data scientists</div>
+              </div>
+              <div class="df-box" style="padding:12px 8px;border-color:var(--purple);color:var(--dark);">
+                <div style="font-size:1rem;margin-bottom:4px;">🚀</div>
+                <div style="font-size:11px;font-weight:600;">Endpoints</div>
+                <div style="font-size:10px;color:var(--mid);">Déployer des modèles en temps réel ou batch</div>
+              </div>
+            </div>
+          </div>
+          <div class="azure-box">
+            <strong>🔵 Métriques d'évaluation à connaître :</strong><br>
+            • <strong>Classification :</strong> Précision, Rappel, F1, AUC-ROC<br>
+            • <strong>Régression :</strong> MSE, MAE, RMSE, R²<br>
+            • <strong>Clustering :</strong> Score de silhouette
+          </div>
+          <div class="highlight">⚡ <strong>Crucial examen :</strong> AutoML = no-code pour citoyens data. Designer = low-code visuel. Notebooks = code pour experts.</div>
+        </div>
+      </div>`,
+    recallQs: [
+      { q: "Quelle est la différence entre AutoML et Azure ML Designer ?", a: "AutoML entraîne et sélectionne automatiquement le meilleur modèle (no-code). Designer est une interface drag-and-drop visuelle pour créer des pipelines ML (low-code). Les deux sont dans Azure ML Studio." },
+      { q: "Cite 3 métriques pour évaluer un modèle de classification.", a: "Précision (Precision), Rappel (Recall), F1-score, AUC-ROC, Accuracy. Pour l'AI-900 : retiens surtout Précision, Rappel et AUC-ROC." },
+      { q: "Quel type d'apprentissage ML utilise-t-on pour regrouper des clients par comportement d'achat ?", a: "Apprentissage non supervisé → Clustering (ex: K-Means). Pas d'étiquettes prédéfinies, le modèle découvre les groupes seul." }
+    ],
+    feynman: "Explique à un manager non-technique pourquoi on utiliserait AutoML plutôt que de coder son propre modèle. Quels sont les avantages et les limites ?"
+  },
+  {
+    id: 2,
+    title: "Computer Vision sur Azure",
+    domain: "Domaine 3 · 15% de l'examen",
+    content: `
+      <div class="lesson-card">
+        <div class="lesson-eyebrow">📖 Leçon · Computer Vision</div>
+        <div class="lesson-title">Azure AI Vision — Services</div>
+        <div class="lesson-body">
+          <p>La Computer Vision permet aux machines de comprendre et interpréter des images et vidéos.</p>
+          <div class="visual-diagram">
+            <div class="diagram-title">AZURE VISION SERVICES</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;">
+              <div class="df-box accent" style="padding:10px 8px;"><div>🔍</div><div style="font-size:11px;font-weight:600;">Image Analysis</div><div style="font-size:10px;color:var(--mid);margin-top:2px;">Tags, objets, description auto</div></div>
+              <div class="df-box blue" style="padding:10px 8px;"><div>😊</div><div style="font-size:11px;font-weight:600;">Face API</div><div style="font-size:10px;color:var(--mid);margin-top:2px;">Détection de visages</div></div>
+              <div class="df-box green" style="padding:10px 8px;"><div>📄</div><div style="font-size:11px;font-weight:600;">Document Intelligence</div><div style="font-size:10px;color:var(--mid);margin-top:2px;">OCR, extraction documents</div></div>
+              <div class="df-box" style="padding:10px 8px;border-color:var(--purple);"><div>🏷️</div><div style="font-size:11px;font-weight:600;color:var(--dark);">Custom Vision</div><div style="font-size:10px;color:var(--mid);margin-top:2px;">Classifie tes propres images</div></div>
+              <div class="df-box" style="padding:10px 8px;border-color:var(--accent2);"><div>🎥</div><div style="font-size:11px;font-weight:600;color:var(--dark);">Video Indexer</div><div style="font-size:10px;color:var(--mid);margin-top:2px;">Analyse vidéos</div></div>
+              <div class="df-box" style="padding:10px 8px;"><div>📊</div><div style="font-size:11px;font-weight:600;color:var(--dark);">Spatial Analysis</div><div style="font-size:10px;color:var(--mid);margin-top:2px;">Présence humaine en temps réel</div></div>
+            </div>
+          </div>
+          <div class="highlight">⚡ <strong>Piège examen :</strong> Custom Vision = tu fournis TES propres images étiquetées pour entraîner un classifieur personnalisé. Différent d'Image Analysis (modèle pré-entraîné général).</div>
+          <div class="azure-box"><strong>🔵 Cas d'usage types :</strong><br>
+          • Lire des plaques d'immatriculation → OCR (Document Intelligence)<br>
+          • Détecter si un produit est défectueux → Custom Vision<br>
+          • Décrire automatiquement une image → Image Analysis<br>
+          • Vérifier si une personne porte un masque → Face API + Spatial Analysis</div>
+        </div>
+      </div>`,
+    recallQs: [
+      { q: "Quelle est la différence entre Image Analysis et Custom Vision ?", a: "Image Analysis utilise un modèle pré-entraîné par Microsoft pour analyser des images génériques (tags, objets, descriptions). Custom Vision permet d'entraîner son propre classifieur avec ses propres images étiquetées." },
+      { q: "Quel service Azure utilises-tu pour extraire du texte d'un PDF scanné ?", a: "Azure AI Document Intelligence (anciennement Form Recognizer). Il combine OCR avec compréhension de la structure des documents." },
+      { q: "Cite 4 services Azure liés à la Computer Vision.", a: "Image Analysis, Face API, Document Intelligence (OCR), Custom Vision, Video Indexer, Spatial Analysis." }
+    ],
+    feynman: "Un client veut automatiser la vérification de factures reçues par email (extraire montant, date, fournisseur). Quel service Azure recommandes-tu et pourquoi ?"
+  },
+  {
+    id: 3,
+    title: "NLP & Azure Language Services",
+    domain: "Domaine 4 · 15% de l'examen",
+    content: `
+      <div class="lesson-card">
+        <div class="lesson-eyebrow">📖 Leçon · NLP</div>
+        <div class="lesson-title">Azure AI Language — Services NLP</div>
+        <div class="lesson-body">
+          <p>Le NLP (Natural Language Processing) permet aux machines de comprendre, analyser et générer du langage humain.</p>
+          <div class="visual-diagram">
+            <div class="diagram-title">AZURE LANGUAGE SERVICES</div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;">
+              <div class="df-box accent" style="padding:10px 8px;"><div>😊😠😐</div><div style="font-size:11px;font-weight:600;">Analyse de sentiment</div><div style="font-size:10px;color:var(--mid);">Positif / Négatif / Neutre + score</div></div>
+              <div class="df-box blue" style="padding:10px 8px;"><div>🔑</div><div style="font-size:11px;font-weight:600;">Extraction de phrases clés</div><div style="font-size:10px;color:var(--mid);">Identifie les concepts importants</div></div>
+              <div class="df-box green" style="padding:10px 8px;"><div>🌍</div><div style="font-size:11px;font-weight:600;">Traduction</div><div style="font-size:10px;color:var(--mid);">100+ langues — Azure Translator</div></div>
+              <div class="df-box" style="padding:10px 8px;border-color:var(--purple);"><div>🎯</div><div style="font-size:11px;font-weight:600;color:var(--dark);">Reconnaissance d'entités</div><div style="font-size:10px;color:var(--mid);">Personnes, lieux, organisations</div></div>
+              <div class="df-box" style="padding:10px 8px;border-color:var(--accent2);"><div>❓</div><div style="font-size:11px;font-weight:600;color:var(--dark);">Question Answering</div><div style="font-size:10px;color:var(--mid);">FAQ et knowledge bases</div></div>
+              <div class="df-box" style="padding:10px 8px;"><div>🎤</div><div style="font-size:11px;font-weight:600;color:var(--dark);">Azure Speech</div><div style="font-size:10px;color:var(--mid);">Parole ↔ Texte (STT/TTS)</div></div>
+            </div>
+          </div>
+          <div class="highlight">⚡ <strong>CLU vs Question Answering :</strong> CLU (Conversational Language Understanding) comprend les INTENTIONS des utilisateurs dans un chatbot. Question Answering répond à des questions à partir d'une base de connaissances.</div>
+        </div>
+      </div>`,
+    recallQs: [
+      { q: "Quelle est la différence entre CLU et Question Answering sur Azure ?", a: "CLU (Conversational Language Understanding) analyse les intentions et entités dans un chatbot (ex: 'Réserve un vol Paris-Lyon le 15 mars'). Question Answering extrait des réponses d'une base documentaire (FAQ)." },
+      { q: "Quel service Azure utilises-tu pour détecter si un avis client est positif ou négatif ?", a: "Azure AI Language → Analyse de sentiment. Il retourne un score entre 0 (très négatif) et 1 (très positif) avec la catégorie." },
+      { q: "STT et TTS, ça veut dire quoi dans Azure Speech ?", a: "STT = Speech-To-Text (parole vers texte, transcription). TTS = Text-To-Speech (texte vers parole, synthèse vocale). Les deux sont dans Azure Speech Service." }
+    ],
+    feynman: "Un client veut créer un chatbot qui comprend les demandes de ses utilisateurs en français et en anglais. Quels services Azure combines-tu et comment ?"
+  },
+  {
+    id: 4,
+    title: "IA Générative & Azure OpenAI",
+    domain: "Domaine 5 · 15% de l'examen — NOUVEAU 2025",
+    content: `
+      <div class="lesson-card">
+        <div class="lesson-eyebrow">📖 Leçon · ⚠️ Très important en 2025</div>
+        <div class="lesson-title">IA Générative — Concepts fondamentaux</div>
+        <div class="lesson-body">
+          <p>L'IA générative crée du contenu original (texte, images, code, audio) à partir d'un prompt. C'est le domaine qui a le plus évolué dans l'AI-900 en 2025.</p>
+          <div class="visual-diagram">
+            <div class="diagram-title">COMMENT FONCTIONNE UN LLM</div>
+            <div class="diagram-flow">
+              <div class="df-box">Prompt utilisateur</div>
+              <div class="df-arrow">→</div>
+              <div class="df-box highlight">LLM<br><small style="font-size:10px;">GPT-4, etc.</small></div>
+              <div class="df-arrow">→</div>
+              <div class="df-box accent">Tokens prédits</div>
+              <div class="df-arrow">→</div>
+              <div class="df-box green">Réponse générée</div>
+            </div>
+          </div>
+          <div class="azure-box">
+            <strong>🔵 Azure OpenAI Service :</strong><br>
+            • Accès aux modèles OpenAI (GPT-4, DALL-E, Whisper, Embeddings) via Azure<br>
+            • Sécurité enterprise + conformité Microsoft<br>
+            • <strong>Azure AI Foundry</strong> = plateforme pour builder des apps IA de bout en bout<br>
+            • <strong>Copilot</strong> = IA intégrée dans les apps Microsoft 365
+          </div>
+          <div class="highlight">⚡ <strong>Concepts clés IA générative pour l'exam :</strong><br>
+          • <strong>Tokens</strong> = unités de texte traitées par le modèle<br>
+          • <strong>Température</strong> = créativité (0=déterministe, 1=créatif)<br>
+          • <strong>Hallucination</strong> = le modèle invente des informations fausses<br>
+          • <strong>RAG</strong> = Retrieval-Augmented Generation, connecter le modèle à des données réelles<br>
+          • <strong>Fine-tuning</strong> = adapter un modèle à une tâche spécifique</div>
+        </div>
+      </div>`,
+    recallQs: [
+      { q: "Qu'est-ce qu'une hallucination dans le contexte des LLMs ?", a: "Une hallucination = le modèle génère des informations fausses mais présentées avec confiance. Ex: inventer une référence bibliographique. Solutions : RAG, grounding avec données réelles." },
+      { q: "Qu'est-ce que Azure AI Foundry ?", a: "Azure AI Foundry (anciennement Azure AI Studio) est la plateforme Microsoft pour concevoir, tester et déployer des applications IA de bout en bout, notamment avec des modèles GPT via Azure OpenAI Service." },
+      { q: "Quelle est la différence entre fine-tuning et RAG ?", a: "Fine-tuning = entraîner davantage le modèle sur tes données (permanent, coûteux). RAG = au moment de la requête, chercher les documents pertinents et les injecter dans le contexte (dynamique, moins coûteux)." }
+    ],
+    feynman: "Explique à un directeur financier ce que sont les risques d'hallucination dans un LLM et comment les mitiger dans un projet d'entreprise."
+  },
+  {
+    id: 5,
+    title: "Agents & Azure AI Foundry",
+    domain: "Domaine 6 · 10% de l'examen",
+    content: `
+      <div class="lesson-card">
+        <div class="lesson-eyebrow">📖 Leçon · Agents IA</div>
+        <div class="lesson-title">Agents IA & Azure Foundry</div>
+        <div class="lesson-body">
+          <p>Un agent IA est un système qui utilise un LLM comme "cerveau" pour planifier et exécuter des tâches de manière autonome.</p>
+          <div class="visual-diagram">
+            <div class="diagram-title">ARCHITECTURE D'UN AGENT IA</div>
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;">
+              <div class="df-box highlight" style="padding:12px 8px;"><div>🧠</div><div style="font-size:11px;font-weight:600;">LLM (cerveau)</div><div style="font-size:10px;color:rgba(245,240,232,0.6);">GPT-4, Claude...</div></div>
+              <div class="df-box accent" style="padding:12px 8px;"><div>🔧</div><div style="font-size:11px;font-weight:600;">Outils</div><div style="font-size:10px;color:var(--mid);">Search, Code, APIs, DB</div></div>
+              <div class="df-box blue" style="padding:12px 8px;"><div>💾</div><div style="font-size:11px;font-weight:600;">Mémoire</div><div style="font-size:10px;color:var(--mid);">Contexte court/long terme</div></div>
+              <div class="df-box green" style="padding:12px 8px;"><div>📋</div><div style="font-size:11px;font-weight:600;">Planification</div><div style="font-size:10px;color:var(--mid);">Décompose les tâches</div></div>
+            </div>
+          </div>
+          <div class="azure-box"><strong>🔵 Sur Azure :</strong><br>
+          • <strong>Azure AI Foundry</strong> = builder des agents enterprise<br>
+          • <strong>Semantic Kernel</strong> = SDK pour orchestrer des agents<br>
+          • <strong>Copilot Studio</strong> = créer des copilots sans code</div>
+          <div class="highlight">⚡ <strong>Rappel IA Responsable pour les agents :</strong> Les agents autonomes amplifient les risques → surveillance humaine (human-in-the-loop) encore plus critique.</div>
+        </div>
+      </div>`,
+    recallQs: [
+      { q: "Quelles sont les 4 composantes d'un agent IA ?", a: "1. LLM (cerveau/raisonnement), 2. Outils (search, code, APIs), 3. Mémoire (contexte court et long terme), 4. Planification (décomposition des tâches en étapes)." },
+      { q: "Quelle est la différence entre Azure AI Foundry et Copilot Studio ?", a: "Azure AI Foundry = plateforme pour développeurs pour créer des apps IA complexes (code). Copilot Studio = outil no-code pour créer des chatbots/copilots métier sans coder." },
+      { q: "Pourquoi le concept de 'human-in-the-loop' est-il important pour les agents IA ?", a: "Les agents autonomes prennent des décisions et exécutent des actions en chaîne. Sans supervision humaine, les erreurs peuvent s'amplifier. Human-in-the-loop = validation humaine aux étapes critiques." }
+    ],
+    feynman: "Décris comment tu construirais un agent IA pour automatiser l'analyse de rapports de projet dans ton travail de consultant. Quels outils Azure utiliserais-tu ?"
+  }
+];
+
+const FLASHCARDS = [
+  { front:"Qu'est-ce qu'Azure AutoML ?", back:"Service d'Azure ML Studio qui entraîne et compare automatiquement de nombreux modèles ML pour trouver le meilleur, sans code. Idéal pour les non-experts.", tag:"ML", interval:1, ease:2.5 },
+  { front:"6 principes d'IA Responsable Microsoft ?", back:"Équité, Fiabilité & Sécurité, Confidentialité & Sécurité des données, Inclusion, Transparence, Responsabilité. Moyen mémo : É-F-C-I-T-R", tag:"IA", interval:1, ease:2.5 },
+  { front:"Différence entre Image Analysis et Custom Vision ?", back:"Image Analysis = modèle Microsoft pré-entraîné pour images génériques. Custom Vision = tu entraînes TON propre classificateur avec tes propres images étiquetées.", tag:"Vision", interval:1, ease:2.5 },
+  { front:"Qu'est-ce qu'une hallucination dans un LLM ?", back:"Le modèle génère des informations fausses présentées avec confiance. Solution : RAG (Retrieval-Augmented Generation) qui ancre les réponses dans des données réelles.", tag:"GenAI", interval:1, ease:2.5 },
+  { front:"Azure AI Language vs Azure Speech ?", back:"Azure AI Language = texte écrit (sentiment, entités, traduction, NLU). Azure Speech = audio (STT: parole→texte, TTS: texte→parole).", tag:"NLP", interval:1, ease:2.5 },
+  { front:"Qu'est-ce que RAG ?", back:"Retrieval-Augmented Generation : au moment de la requête, on cherche les documents pertinents dans une base de données et on les injecte dans le contexte du LLM pour des réponses plus précises.", tag:"GenAI", interval:1, ease:2.5 },
+  { front:"3 métriques pour évaluer un modèle de classification ?", back:"Précision (Precision), Rappel (Recall), F1-score, AUC-ROC. Pour l'AI-900 : retiens que l'Accuracy seule est insuffisante si les classes sont déséquilibrées.", tag:"ML", interval:1, ease:2.5 },
+  { front:"Quel service Azure pour extraire du texte de documents PDF ?", back:"Azure AI Document Intelligence (anciennement Form Recognizer). Combine OCR + compréhension structure (tableaux, formulaires, factures).", tag:"Vision", interval:1, ease:2.5 },
+  { front:"CLU vs Question Answering ?", back:"CLU (Conversational Language Understanding) = comprend les intentions dans un chatbot. Question Answering = extrait des réponses d'une base documentaire (FAQ).", tag:"NLP", interval:1, ease:2.5 },
+  { front:"Qu'est-ce qu'Azure AI Foundry ?", back:"Plateforme Microsoft pour concevoir, tester et déployer des applications IA de bout en bout, notamment avec Azure OpenAI Service. Anciennement Azure AI Studio.", tag:"GenAI", interval:1, ease:2.5 },
+  { front:"Supervisé vs Non supervisé en ML ?", back:"Supervisé = données ÉTIQUETÉES, le modèle apprend à prédire un label (classification, régression). Non supervisé = PAS d'étiquettes, le modèle trouve des structures (clustering, anomalies).", tag:"ML", interval:1, ease:2.5 },
+  { front:"Qu'est-ce que le fine-tuning d'un LLM ?", back:"Adapter un modèle pré-entraîné à une tâche spécifique en continuant son entraînement sur un dataset ciblé. Plus coûteux que le prompting ou le RAG mais résultats très adaptés.", tag:"GenAI", interval:1, ease:2.5 },
+  { front:"Azure ML Designer vs Notebooks ?", back:"Designer = interface drag-and-drop LOW-CODE pour créer des pipelines ML visuellement. Notebooks = CODE Python/R pour data scientists expérimentés.", tag:"ML", interval:1, ease:2.5 },
+  { front:"Quel service Azure pour analyser le sentiment de tweets ?", back:"Azure AI Language → Analyse de sentiment. Retourne Positif/Négatif/Neutre avec un score de confiance entre 0 et 1.", tag:"NLP", interval:1, ease:2.5 },
+  { front:"Qu'est-ce qu'un token dans les LLMs ?", back:"Unité de texte traitée par le modèle (~3/4 d'un mot en anglais). Les coûts et limites des LLMs sont souvent mesurés en tokens. GPT-4 a une fenêtre de 128k tokens.", tag:"GenAI", interval:1, ease:2.5 },
+];
+
+const EXAM_QUESTIONS = [
+  { q:"Quel service Azure permet de créer un classificateur d'images personnalisé avec vos propres photos ?", opts:["Image Analysis","Custom Vision","Face API","Document Intelligence"], c:1, domain:"Computer Vision", expl:"Custom Vision = entraîner votre propre modèle avec vos images. Image Analysis utilise un modèle générique pré-entraîné." },
+  { q:"Selon Microsoft, quel principe d'IA Responsable garantit que le système fonctionne comme prévu et ne cause pas de dommages imprévus ?", opts:["Équité","Inclusion","Fiabilité & Sécurité","Transparence"], c:2, domain:"IA Responsable", expl:"Fiabilité & Sécurité = le système se comporte de façon fiable, évite les comportements nuisibles et résiste aux attaques." },
+  { q:"Un data scientist veut entraîner un modèle ML sans écrire de code. Quel outil Azure ML Studio utilise-t-il ?", opts:["Notebooks","CLI Azure","AutoML","Azure DevOps"], c:2, domain:"Machine Learning", expl:"AutoML entraîne et compare automatiquement plusieurs modèles sans code. Notebooks = code Python. Designer = low-code visuel." },
+  { q:"Quel service Azure convertit la parole en texte (Speech-to-Text) ?", opts:["Azure AI Language","Azure Translator","Azure Speech","Azure Bot Service"], c:2, domain:"NLP & Speech", expl:"Azure Speech Service gère STT (Speech-to-Text) et TTS (Text-to-Speech). Azure AI Language traite le texte écrit." },
+  { q:"Une entreprise veut que son chatbot comprenne 'Réserve-moi un vol pour Paris demain matin'. Quelle capacité NLP est utilisée ?", opts:["Analyse de sentiment","Extraction de phrases clés","Compréhension du langage (CLU)","Question Answering"], c:2, domain:"NLP", expl:"CLU (Conversational Language Understanding) identifie l'intention (réserver) et les entités (Paris, demain matin). C'est le moteur des chatbots Azure." },
+  { q:"Qu'est-ce qu'une hallucination dans le contexte des LLMs ?", opts:["Un bug d'affichage","La génération d'informations fausses mais présentées comme vraies","Un modèle trop complexe","Une erreur de tokenisation"], c:1, domain:"IA Générative", expl:"Les LLMs génèrent le token le plus probable, pas nécessairement le plus vrai. Ils peuvent inventer des faits plausibles mais faux." },
+  { q:"Quel service Azure utilise-t-on pour extraire automatiquement les données d'une facture scannée ?", opts:["Custom Vision","Image Analysis","Azure AI Document Intelligence","Azure OCR basique"], c:2, domain:"Computer Vision", expl:"Azure AI Document Intelligence comprend la structure des documents (factures, formulaires, reçus) en plus de l'OCR." },
+  { q:"Quelle est la différence entre apprentissage supervisé et non supervisé ?", opts:["Le supervisé utilise plus de données","Le supervisé utilise des données étiquetées, le non supervisé découvre des patterns sans labels","Le non supervisé est plus précis","Le supervisé ne peut pas faire de clustering"], c:1, domain:"Machine Learning", expl:"Supervisé = labels fournis (output connu). Non supervisé = pas de labels, le modèle cherche des structures cachées." },
+  { q:"Azure AI Foundry est principalement utilisé pour :", opts:["Stocker des données","Construire et déployer des applications IA de bout en bout","Gérer les utilisateurs Azure","Surveiller les performances réseau"], c:1, domain:"IA Générative", expl:"Azure AI Foundry (anciennement Azure AI Studio) est la plateforme pour concevoir, tester et déployer des apps IA, incluant les modèles GPT via Azure OpenAI Service." },
+  { q:"Quel principe d'IA Responsable garantit que les systèmes IA ne discriminent pas selon la race, le genre ou d'autres attributs ?", opts:["Transparence","Responsabilité","Équité","Fiabilité"], c:2, domain:"IA Responsable", expl:"Équité = les systèmes IA doivent traiter toutes les personnes équitablement, sans discriminations. Exemple : un modèle de crédit ne doit pas discriminer selon l'origine ethnique." },
+  { q:"Quel service Azure est le mieux adapté pour créer un chatbot FAQ à partir de documents Word ?", opts:["CLU","Azure Bot Service","Question Answering","Azure OpenAI Service"], c:2, domain:"NLP", expl:"Question Answering extrait des réponses depuis des bases documentaires (Word, PDF, URL). CLU comprend les intentions mais ne gère pas les FAQ documentaires." },
+  { q:"RAG (Retrieval-Augmented Generation) est utilisé pour :", opts:["Entraîner un LLM from scratch","Ancrer les réponses du LLM dans des données réelles pour réduire les hallucinations","Compresser un modèle","Créer des embeddings"], c:1, domain:"IA Générative", expl:"RAG = au moment de la requête, chercher les documents pertinents et les injecter dans le contexte du LLM. Réduit les hallucinations et permet de répondre sur des données récentes." },
+  { q:"Quelle métrique utilise-t-on pour évaluer un modèle de régression ?", opts:["AUC-ROC","F1-Score","RMSE (Root Mean Square Error)","Matrice de confusion"], c:2, domain:"Machine Learning", expl:"RMSE, MAE, R² sont des métriques de régression (valeurs continues). AUC-ROC, F1, matrice de confusion sont pour la classification." },
+  { q:"Azure Translator fait partie de quel ensemble de services ?", opts:["Azure Machine Learning","Azure AI Services (Cognitive Services)","Azure DevOps","Azure Storage"], c:1, domain:"NLP", expl:"Azure Translator fait partie d'Azure AI Services (anciennement Cognitive Services), qui regroupe les APIs IA prêtes à l'emploi de Microsoft." },
+  { q:"Quel outil Azure ML permet de créer des pipelines ML par glisser-déposer sans coder ?", opts:["AutoML","Azure ML Designer","Notebooks","MLflow"], c:1, domain:"Machine Learning", expl:"Azure ML Designer = interface low-code drag-and-drop pour construire visuellement des pipelines ML. AutoML = no-code mais automatique (sans pipelines manuels)." },
+  { q:"Laquelle de ces tâches est un exemple d'apprentissage NON supervisé ?", opts:["Prédire si un email est spam","Prédire le prix d'une maison","Regrouper des clients par comportement d'achat","Détecter des objets dans une image"], c:2, domain:"Machine Learning", expl:"Clustering = non supervisé (pas de labels, le modèle trouve les groupes seul). Spam, prix, détection d'objets = supervisé (on fournit les labels pendant l'entraînement)." },
+  { q:"Quel service Azure analyse les émotions dans du texte client ?", opts:["Azure Speech","Azure AI Language - Analyse de sentiment","Custom Vision","Azure Translator"], c:1, domain:"NLP", expl:"Azure AI Language → Analyse de sentiment détecte Positif/Négatif/Neutre avec un score de confiance. Très utilisé pour analyser des avis clients." },
+  { q:"La 'température' dans un LLM contrôle :", opts:["La vitesse de génération","La créativité/randomness des réponses (0=déterministe, valeur élevée=créatif)","La taille du contexte","Le nombre de tokens générés"], c:1, domain:"IA Générative", expl:"Température basse (0) = réponses déterministes et prévisibles. Température haute (0.8-1) = réponses créatives et variées. Paramètre clé pour calibrer les LLMs." },
+  { q:"Quel est le rôle du principe de 'Transparence' dans l'IA Responsable ?", opts:["S'assurer que l'IA est rentable","Permettre aux utilisateurs de comprendre comment les décisions IA sont prises","Limiter l'accès à l'IA","Protéger les données personnelles"], c:1, domain:"IA Responsable", expl:"Transparence = les systèmes IA doivent être compréhensibles. Les utilisateurs doivent savoir quand ils interagissent avec une IA et comment les décisions sont prises (explicabilité)." },
+  { q:"Azure Copilot Studio est principalement utilisé pour :", opts:["Écrire du code Python","Créer des chatbots et copilots sans coder pour les applications métier","Entraîner des modèles ML","Analyser des images"], c:1, domain:"IA Générative", expl:"Copilot Studio = outil no-code pour créer des chatbots et copilots intégrés aux apps Microsoft 365 (Teams, SharePoint...). Différent d'Azure AI Foundry qui est pour les développeurs." }
+];
+
+// ===================== STATE =====================
+let xp = parseInt(localStorage.getItem('ai900_xp') || '0');
+let currentLesson = 1;
+let currentFC = 0;
+let fcFilter = 'all';
+let fcFlipped = false;
+let fcCards = [...FLASHCARDS];
+let examCur = 0;
+let examScore = 0;
+let examAnswered = false;
+let examDone = false;
+let examShuffled = [];
+let examTimerInterval = null;
+let examTimeLeft = 1800;
+let pomoInterval = null;
+let pomoRunning = false;
+let pomoSeconds = 25 * 60;
+let pomoDone = 0;
+let planChecked = JSON.parse(localStorage.getItem('ai900_plan') || '{}');
+
+// ===================== UTILS =====================
+function addXP(amount) {
+  xp += amount;
+  localStorage.setItem('ai900_xp', xp);
+  document.getElementById('xpBadge').textContent = xp + ' XP';
+}
+
+function showScreen(name, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name === 'flashcards') renderFlashcard();
+  if (name === 'exam') initExam();
+}
+
+// ===================== DASHBOARD =====================
+const PLAN = [
+  { day:1, focus:"Concepts IA & IA Responsable", method:"recall", time:"1h" },
+  { day:2, focus:"Machine Learning Azure — bases", method:"spaced", time:"1h30" },
+  { day:3, focus:"Computer Vision Azure", method:"feynman", time:"1h" },
+  { day:4, focus:"Révision J1+J2 (interleaving)", method:"interleave", time:"1h" },
+  { day:5, focus:"NLP & Azure Language", method:"recall", time:"1h" },
+  { day:6, focus:"IA Générative & Azure OpenAI", method:"feynman", time:"1h30" },
+  { day:7, focus:"Révision J3-J5 + Flashcards", method:"spaced", time:"1h" },
+  { day:8, focus:"Agents & Azure Foundry", method:"recall", time:"45min" },
+  { day:9, focus:"Examen blanc complet", method:"exam", time:"45min" },
+  { day:10, focus:"Révision ciblée + Flashcards dues", method:"interleave", time:"1h" },
+];
+const METHOD_LABELS = { recall:"Rappel actif", spaced:"Répétition espacée", feynman:"Technique Feynman", interleave:"Interleaving", exam:"Examen simulé" };
+const METHOD_CLASS = { recall:"dm-recall", spaced:"dm-spaced", feynman:"dm-feynman", interleave:"dm-interleave", exam:"dm-exam" };
+
+function renderPlan() {
+  const tbody = document.getElementById('planBody');
+  tbody.innerHTML = PLAN.map((p, i) => `
+    <tr>
+      <td><span class="day-num">Jour ${p.day}</span></td>
+      <td><span class="day-focus">${p.focus}</span></td>
+      <td><span class="day-method ${METHOD_CLASS[p.method]}">${METHOD_LABELS[p.method]}</span></td>
+      <td><span class="day-time">${p.time}</span></td>
+      <td><span class="${planChecked[i] ? 'done-check' : 'todo-check'}" onclick="toggleDay(${i})">${planChecked[i] ? '✅' : '○'}</span></td>
+    </tr>
+  `).join('');
+}
+
+function toggleDay(i) {
+  planChecked[i] = !planChecked[i];
+  localStorage.setItem('ai900_plan', JSON.stringify(planChecked));
+  if (planChecked[i]) addXP(10);
+  renderPlan();
+}
+
+// ===================== STUDY =====================
+function loadLesson(idx) {
+  currentLesson = idx;
+  showScreen('study', document.querySelectorAll('.nav-tab')[1]);
+  renderLesson();
+}
+
+function renderLesson() {
+  const l = LESSONS[currentLesson];
+  document.getElementById('lessonEyebrow').textContent = `Domaine ${currentLesson+1} / ${LESSONS.length} — ${l.domain}`;
+  document.getElementById('lessonTitle').textContent = l.title;
+
+  let html = l.content;
+
+  // Rappel actif section
+  html += `<div class="recall-section">
+    <div class="recall-header">
+      <span class="recall-icon">🎯</span>
+      <div>
+        <div class="recall-title">Rappel actif — ferme tes notes et réponds</div>
+        <div class="recall-subtitle">Clique sur chaque question pour révéler la réponse après avoir réfléchi</div>
+      </div>
+    </div>
+    <div class="recall-questions">
+      ${l.recallQs.map((rq, i) => `
+        <div class="recall-q" onclick="toggleRecall(this)">
+          <div class="recall-q-text">${rq.q}</div>
+          <div class="recall-reveal">▸ Clique pour révéler</div>
+          <div class="recall-answer">${rq.a}</div>
+        </div>
+      `).join('')}
+    </div>
+  </div>`;
+
+  // Feynman
+  html += `<div class="feynman-box">
+    <div class="feynman-header">
+      <span style="font-size:1.2rem;">🗣️</span>
+      <div class="feynman-title">Technique Feynman — Explique avec tes propres mots</div>
+    </div>
+    <div class="feynman-prompt">${l.feynman}</div>
+    <textarea class="feynman-input" placeholder="Écris ton explication ici comme si tu l'expliquais à quelqu'un..." rows="4" onchange="addXP(5)"></textarea>
+  </div>`;
+
+  document.getElementById('lessonContent').innerHTML = html;
+  addXP(15);
+}
+
+function toggleRecall(el) {
+  el.classList.toggle('open');
+  if (el.classList.contains('open')) addXP(3);
+}
+
+function nextLesson() {
+  if (currentLesson < LESSONS.length - 1) {
+    currentLesson++;
+    renderLesson();
+    window.scrollTo(0, 0);
+  }
+}
+function prevLesson() {
+  if (currentLesson > 0) {
+    currentLesson--;
+    renderLesson();
+    window.scrollTo(0, 0);
+  }
+}
+
+// ===================== POMODORO =====================
+function togglePomodoro() {
+  if (pomoRunning) {
+    clearInterval(pomoInterval);
+    pomoRunning = false;
+    document.getElementById('pomoBtn').textContent = '▶ START';
+  } else {
+    pomoRunning = true;
+    document.getElementById('pomoBtn').textContent = '⏸ PAUSE';
+    pomoInterval = setInterval(() => {
+      pomoSeconds--;
+      if (pomoSeconds <= 0) {
+        clearInterval(pomoInterval);
+        pomoRunning = false;
+        pomoDone++;
+        if (pomoDone <= 4) document.getElementById('pd' + (pomoDone-1)).classList.add('filled');
+        addXP(25);
+        document.getElementById('pomoBtn').textContent = '▶ START';
+        pomoSeconds = pomoDone % 4 === 0 ? 15 * 60 : 25 * 60;
+        alert(pomoDone % 4 === 0 ? '🎉 Pause longue ! 15 minutes de repos.' : '✅ Pomodoro terminé ! Pause 5 min.');
+      }
+      const m = Math.floor(pomoSeconds / 60);
+      const s = pomoSeconds % 60;
+      document.getElementById('pomoTimer').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }, 1000);
+  }
+}
+function resetPomodoro() {
+  clearInterval(pomoInterval);
+  pomoRunning = false;
+  pomoSeconds = 25 * 60;
+  document.getElementById('pomoTimer').textContent = '25:00';
+  document.getElementById('pomoBtn').textContent = '▶ START';
+}
+
+// ===================== FLASHCARDS =====================
+function filterCards(f) {
+  fcFilter = f;
+  currentFC = 0;
+  fcFlipped = false;
+  renderFlashcard();
+}
+
+function getFilteredCards() {
+  if (fcFilter === 'all') return FLASHCARDS;
+  if (fcFilter === 'due') return FLASHCARDS.filter(c => c.interval <= 1);
+  return FLASHCARDS.filter(c => c.tag === fcFilter);
+}
+
+function renderFlashcard() {
+  const cards = getFilteredCards();
+  document.getElementById('fcTotal').textContent = FLASHCARDS.length;
+  document.getElementById('fcDue').textContent = FLASHCARDS.filter(c=>c.interval<=1).length;
+  document.getElementById('fcLearned').textContent = FLASHCARDS.filter(c=>c.interval>=7).length;
+  document.getElementById('fcStreak').textContent = parseInt(localStorage.getItem('ai900_streak')||'0');
+
+  if (cards.length === 0) {
+    document.getElementById('flashcardArea').innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">Aucune carte dans ce filtre.</div>';
+    return;
+  }
+  if (currentFC >= cards.length) currentFC = 0;
+  const card = cards[currentFC];
+
+  document.getElementById('flashcardArea').innerHTML = `
+    <div style="margin-bottom:8px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);">
+      ${currentFC+1} / ${cards.length} · ${card.tag} · Intervalle : ${card.interval}j
+    </div>
+    <div class="flashcard-wrap" onclick="flipCard()" id="fcWrap">
+      <div class="flashcard" id="theCard">
+        <div class="fc-front">
+          <div class="fc-label">QUESTION — clique pour retourner</div>
+          <div class="fc-text">${card.front}</div>
+          <div class="fc-hint">Essaie de répondre mentalement avant de retourner →</div>
+        </div>
+        <div class="fc-back">
+          <div class="fc-label">RÉPONSE — Évalue ta difficulté</div>
+          <div class="fc-text">${card.back}</div>
+        </div>
+      </div>
+    </div>
+    <div class="sr-buttons" id="srBtns" style="display:none;">
+      <button class="sr-btn hard" onclick="rateCard('hard')">😰 DIFFICILE<br><small>+1j</small></button>
+      <button class="sr-btn ok" onclick="rateCard('ok')">🤔 CORRECT<br><small>+3j</small></button>
+      <button class="sr-btn easy" onclick="rateCard('easy')">😊 FACILE<br><small>+7j</small></button>
+    </div>
+  `;
+  fcFlipped = false;
+}
+
+function flipCard() {
+  const card = document.getElementById('theCard');
+  fcFlipped = !fcFlipped;
+  card.classList.toggle('flipped', fcFlipped);
+  if (fcFlipped) document.getElementById('srBtns').style.display = 'flex';
+  addXP(2);
+}
+
+function rateCard(rating) {
+  const cards = getFilteredCards();
+  const card = cards[currentFC];
+  if (rating === 'hard') card.interval = 1;
+  else if (rating === 'ok') card.interval = 3;
+  else card.interval = 7;
+  addXP(rating === 'easy' ? 10 : rating === 'ok' ? 6 : 3);
+  currentFC++;
+  if (currentFC >= cards.length) currentFC = 0;
+  renderFlashcard();
+}
+
+function nextFlashcard() {
+  const cards = getFilteredCards();
+  currentFC = (currentFC + 1) % cards.length;
+  fcFlipped = false;
+  renderFlashcard();
+}
+
+// ===================== EXAM =====================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function initExam() {
+  if (examDone) return;
+  examShuffled = shuffle(EXAM_QUESTIONS).slice(0, 20);
+  examCur = 0;
+  examScore = 0;
+  examAnswered = false;
+  examTimeLeft = 1800;
+  document.getElementById('examResult').style.display = 'none';
+
+  if (examTimerInterval) clearInterval(examTimerInterval);
+  examTimerInterval = setInterval(() => {
+    examTimeLeft--;
+    const m = Math.floor(examTimeLeft/60);
+    const s = examTimeLeft%60;
+    document.getElementById('examTimer').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    if (examTimeLeft <= 0) {
+      clearInterval(examTimerInterval);
+      showExamResults();
+    }
+    if (examTimeLeft === 300) document.getElementById('examTimer').style.color = 'var(--accent)';
+  }, 1000);
+
+  renderExamQ();
+}
+
+function renderExamQ() {
+  if (examCur >= examShuffled.length) { showExamResults(); return; }
+  examAnswered = false;
+  const q = examShuffled[examCur];
+  document.getElementById('examQNum').textContent = examCur + 1;
+  document.getElementById('examTotal').textContent = examShuffled.length;
+  document.getElementById('examScore').textContent = examScore;
+
+  const optIndices = shuffle([0,1,2,3]);
+  const letters = ['A','B','C','D'];
+  document.getElementById('examContent').innerHTML = `
+    <div class="exam-q">
+      <div class="eq-meta">
+        <span class="eq-num">Q.${String(examCur+1).padStart(2,'0')}</span>
+        <span class="eq-domain">${q.domain}</span>
+      </div>
+      <div class="eq-text">${q.q}</div>
+      <div class="eq-opts">
+        ${optIndices.map((origIdx, dispPos) => `
+          <button class="eq-opt" onclick="answerExam(${origIdx}, this, ${optIndices.indexOf(q.c)})">
+            <span class="ol">${letters[dispPos]}</span>${q.opts[origIdx]}
+          </button>
+        `).join('')}
+      </div>
+      <div class="eq-feedback" id="eqFb"></div>
+      <button class="btn-exam-next" id="examNextBtn" onclick="nextExamQ()">
+        ${examCur === examShuffled.length-1 ? 'VOIR MES RÉSULTATS →' : 'QUESTION SUIVANTE →'}
+      </button>
+    </div>
+  `;
+}
+
+function answerExam(origIdx, btn, correctDisplayPos) {
+  if (examAnswered) return;
+  examAnswered = true;
+  const q = examShuffled[examCur];
+  const opts = document.querySelectorAll('.eq-opt');
+  opts.forEach(o => o.disabled = true);
+
+  const fb = document.getElementById('eqFb');
+  if (origIdx === q.c) {
+    btn.classList.add('correct');
+    examScore++;
+    fb.className = 'eq-feedback ok';
+    fb.textContent = '✓ Correct ! ' + q.expl;
+    addXP(10);
+  } else {
+    btn.classList.add('wrong');
+    opts[correctDisplayPos].classList.add('show-c');
+    fb.className = 'eq-feedback ko';
+    fb.textContent = '✗ ' + q.expl;
+    addXP(2);
+  }
+  document.getElementById('examNextBtn').classList.add('vis');
+}
+
+function nextExamQ() {
+  examCur++;
+  if (examCur >= examShuffled.length) showExamResults();
+  else renderExamQ();
+}
+
+function showExamResults() {
+  clearInterval(examTimerInterval);
+  examDone = true;
+  document.getElementById('examContent').innerHTML = '';
+  const pct = Math.round((examScore / examShuffled.length) * 1000);
+  const pass = pct >= 700;
+
+  let verdict, msg;
+  if (pct >= 850) { verdict = "Excellent ! 🏆"; msg = "Tu es prêt à passer l'AI-900. Confirme tes points faibles et réserve l'examen."; }
+  else if (pass) { verdict = "Bonne performance !"; msg = "Tu dépasses le seuil de passage (700/1000). Révise les domaines où tu as des lacunes."; }
+  else { verdict = "Continue à réviser"; msg = "Tu n'atteignes pas encore 700/1000. Refais les leçons des domaines où tu as le plus d'erreurs."; }
+
+  const result = document.getElementById('examResult');
+  result.style.display = 'block';
+  result.innerHTML = `
+    <div style="font-size:3rem;margin-bottom:8px;">${pass ? '🎉' : '📚'}</div>
+    <div class="er-verdict" style="color:${pass ? 'var(--green)' : 'var(--accent)'}">${verdict}</div>
+    <div class="er-score" style="color:${pass ? 'var(--green)' : 'var(--accent)'}">${pct}</div>
+    <div class="er-pct">/ 1000 points (seuil : 700)</div>
+    <div class="er-msg">${msg}</div>
+    <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--mid);margin-bottom:24px;">${examScore} / ${examShuffled.length} questions correctes</div>
+    <button class="btn-retry" onclick="retryExam()">REFAIRE L'EXAMEN →</button>
+  `;
+  if (pass) addXP(50);
+}
+
+function retryExam() {
+  examDone = false;
+  initExam();
+}
+
+// ===================== INIT =====================
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('xpBadge').textContent = xp + ' XP';
+  renderPlan();
+  setTimeout(() => {
+    document.querySelectorAll('.prog-card').forEach(c => {
+      c.style.setProperty('--prog', c.style.getPropertyValue('--prog'));
+    });
+  }, 300);
+});
+</script>
+</body>
+</html>
