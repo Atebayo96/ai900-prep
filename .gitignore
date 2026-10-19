@@ -1,0 +1,12 @@
+.tv.env
+.venv/
+backup/
+screens/
+launcher/.gradle/
+launcher/build/
+launcher/app/build/
+launcher/local.properties
+launcher/.sdk/
+*.iml
+.idea/
+.DS_Store

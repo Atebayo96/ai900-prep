@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background">#000000</color>
+    <color name="dock_band">#121212</color>
+    <color name="dock_band_stroke">#1F1F1F</color>
+    <color name="tile_placeholder">#1C1C1E</color>
+    <color name="text_primary">#F5F5F7</color>
+    <color name="text_secondary">#9A9A9E</color>
+    <color name="pill_fill">#2EFFFFFF</color>
+    <color name="pill_stroke">#33FFFFFF</color>
+    <color name="pill_fill_focused">#55FFFFFF</color>
+    <color name="pill_stroke_focused">#80FFFFFF</color>
+    <color name="popup_fill">#E6181818</color>
+    <color name="popup_stroke">#33FFFFFF</color>
+    <color name="popup_item_focused">#2EFFFFFF</color>
+</resources>

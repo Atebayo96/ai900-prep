@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- A 1080p TV is 960dp wide. -->
+    <dimen name="screen_margin_h">56dp</dimen>
+    <dimen name="screen_margin_top">36dp</dimen>
+
+    <dimen name="clock_size">72sp</dimen>
+    <dimen name="greeting_size">22sp</dimen>
+    <dimen name="date_size">18sp</dimen>
+
+    <dimen name="pill_height">40dp</dimen>
+    <dimen name="pill_padding_h">18dp</dimen>
+    <dimen name="pill_gap">10dp</dimen>
+    <dimen name="pill_text">15sp</dimen>
+
+    <dimen name="dock_name_size">44sp</dimen>
+    <dimen name="dock_tile_w">196dp</dimen>
+    <dimen name="dock_tile_h">110dp</dimen>
+    <dimen name="dock_tile_gap">18dp</dimen>
+    <dimen name="dock_band_padding">22dp</dimen>
+    <dimen name="dock_band_radius">26dp</dimen>
+    <dimen name="dock_bottom_margin">40dp</dimen>
+
+    <dimen name="grid_tile_w">196dp</dimen>
+    <dimen name="grid_tile_h">110dp</dimen>
+    <dimen name="grid_gap">18dp</dimen>
+    <dimen name="grid_top_padding">64dp</dimen>
+    <dimen name="tile_radius">12dp</dimen>
+    <dimen name="tile_label_size">15sp</dimen>
+    <dimen name="tile_label_height">26dp</dimen>
+
+    <dimen name="popup_width">260dp</dimen>
+    <dimen name="popup_item_height">44dp</dimen>
+</resources>

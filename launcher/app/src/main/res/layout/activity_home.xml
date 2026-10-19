@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Root is a FrameLayout so three layers can stack:
+      1. wallpaper (optional) + dim
+      2. header  (top bar, dock name + glow, dock band)   — slides up out of view
+         grid    (RecyclerView, 4 columns)                 — slides in from below
+      3. the single glass highlight that springs between tiles
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background">
+
+    <ImageView
+        android:id="@+id/wallpaper"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:visibility="gone"
+        android:importantForAccessibility="no" />
+
+    <View
+        android:id="@+id/wallpaper_dim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000000"
+        android:visibility="gone" />
+
+    <!-- ============ HEADER (home state) ============ -->
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/screen_margin_h"
+        android:paddingEnd="@dimen/screen_margin_h"
+        android:paddingTop="@dimen/screen_margin_top"
+        android:paddingBottom="@dimen/dock_bottom_margin">
+
+        <!-- Top bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/greeting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/greeting_size"
+                    android:letterSpacing="0.01" />
+
+                <TextView
+                    android:id="@+id/clock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="-6dp"
+                    android:textColor="@color/text_primary"
+                    android:textSize="@dimen/clock_size"
+                    android:includeFontPadding="false"
+                    android:letterSpacing="-0.02" />
+
+                <TextView
+                    android:id="@+id/date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/date_size" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/pills"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp">
+
+                <TextView
+                    android:id="@+id/pill_inputs"
+                    style="@style/Pill"
+                    android:text="@string/pill_inputs" />
+
+                <TextView
+                    android:id="@+id/pill_wifi"
+                    style="@style/Pill"
+                    android:layout_marginStart="@dimen/pill_gap"
+                    android:text="@string/pill_wifi" />
+
+                <TextView
+                    android:id="@+id/pill_settings"
+                    style="@style/Pill"
+                    android:layout_marginStart="@dimen/pill_gap"
+                    android:text="@string/pill_settings" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Flexible middle: glow + focused dock app name sit just above the dock. -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <net.cleanhome.launcher.GlowView
+                android:id="@+id/glow"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <TextView
+                android:id="@+id/dock_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|bottom"
+                android:layout_marginBottom="22dp"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/dock_name_size"
+                android:letterSpacing="0.01"
+                android:includeFontPadding="false" />
+        </FrameLayout>
+
+        <!-- Dock band -->
+        <LinearLayout
+            android:id="@+id/dock_band"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:background="@drawable/dock_band_bg"
+            android:padding="@dimen/dock_band_padding"
+            android:clipChildren="false"
+            android:clipToPadding="false" />
+    </LinearLayout>
+
+    <!-- ============ GRID (apps state) ============ -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/grid"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_horizontal"
+        android:paddingTop="@dimen/grid_top_padding"
+        android:paddingBottom="@dimen/grid_top_padding"
+        android:clipToPadding="false"
+        android:clipChildren="false"
+        android:overScrollMode="never"
+        android:descendantFocusability="afterDescendants"
+        android:visibility="invisible" />
+
+    <!-- The one glass highlight. Drawn above everything, moved by code. -->
+    <net.cleanhome.launcher.HighlightView
+        android:id="@+id/highlight"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:visibility="invisible" />
+</FrameLayout>

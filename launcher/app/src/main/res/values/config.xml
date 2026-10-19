@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    USER CONFIGURATION — this is the only file you normally need to edit.
+    Rebuild and reinstall afterwards:  ./build-and-install.sh
+-->
+<resources>
+
+    <!-- The four dock apps, in left-to-right order. Package names, not labels.
+         Find a package name with:  tools/tv.sh shell "pm list packages | grep -i netflix"
+         Missing or uninstalled packages are skipped and the dock is topped up
+         with the first apps of the grid so it always holds up to four. -->
+    <string-array name="dock_packages">
+        <item>com.netflix.ninja</item>
+        <item>com.google.android.youtube.tv</item>
+        <item>com.amazon.amazonvideo.livingroom</item>
+        <item>com.plexapp.android</item>
+    </string-array>
+
+    <!-- Apps hidden from the grid entirely (they stay installed). -->
+    <string-array name="hidden_packages">
+        <item>com.google.android.tvlauncher</item>
+        <item>com.google.android.apps.tv.launcherx</item>
+    </string-array>
+
+    <!-- Your name for the greeting ("Good evening, Sam"). Leave empty for just "Good evening". -->
+    <string name="greeting_name"></string>
+
+    <!-- Columns in the app grid. Four matches the dock. -->
+    <integer name="grid_columns">4</integer>
+
+    <!-- Clock: "system" follows the TV setting, or force "12" / "24". -->
+    <string name="clock_format">system</string>
+
+    <!-- Wallpaper. Drop an image at res/drawable-nodpi/wallpaper.png (or .jpg) and it is
+         picked up automatically; no file = pitch black. Dim is 0 (off) to 100 (black). -->
+    <integer name="wallpaper_dim_percent">55</integer>
+
+    <!-- Inputs dropdown. Normally auto-detected through the TV input framework.
+         live_tv_package: the app opened by the "Live TV" entry (empty = auto).
+         input_switch_component: optional "pkg/activity" of the maker's own input picker,
+         used as a fallback when the TV app refuses the standard passthrough intent. -->
+    <string name="live_tv_package"></string>
+    <string name="input_switch_component"></string>
+    <bool name="inputs_show_live_tv">true</bool>
+
+</resources>
