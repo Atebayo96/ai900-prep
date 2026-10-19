@@ -231,6 +231,21 @@ Finally, switch **USB debugging off** on the TV (USB power).
 
 ---
 
+## What has been verified, and what has not
+
+The launcher was installed on an Android TV 14 (API 34) emulator and driven with injected
+D-pad presses, with a screenshot after every step: dock/top-bar/grid clamping at both ends,
+Up/Down moving exactly one row, grid scrolling across six rows, Up from the grid returning to
+the dock, the Inputs dropdown, the Settings pill and the HOME key returning to the launcher.
+It has **not** yet been run on a physical TV: HDMI input switching, the Wi-Fi name and
+manufacturer-specific HOME behaviour can only be checked on the real set. The device scripts in
+`tools/` have been exercised against a mock adb and the emulator, not against a TV on a LAN.
+
+To fill an emulator's grid for testing, `launcher/app/build.gradle` accepts
+`-PappIdSuffix=.dummy1` to build a copy of the launcher under another package name.
+
+---
+
 ## Prompt for a coding assistant
 
 > I cloned this repo (Android TV debloat + launcher). Reuse `tools/` and `launcher/`; only edit
