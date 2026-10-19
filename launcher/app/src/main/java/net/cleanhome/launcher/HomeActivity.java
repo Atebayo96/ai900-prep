@@ -138,6 +138,7 @@ public class HomeActivity extends Activity implements GridAdapter.Listener {
         grid.setLayoutParams(glp);
 
         setupWallpaper();
+        dockName.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> syncGlowCenter());
         root.getViewTreeObserver().addOnPreDrawListener(preDraw);
         register(packageReceiver, packageFilter());
         loadApps();
@@ -189,14 +190,39 @@ public class HomeActivity extends Activity implements GridAdapter.Listener {
     private void applyApps(AppRepository.Result r) {
         boolean first = !appsLoaded;
         appsLoaded = true;
-        dockApps.clear();
-        dockApps.addAll(r.dock);
-        buildDock();
-        adapter.setItems(r.grid);
+        // A package broadcast (an app updating itself) must not move the focus: remember it,
+        // touch only what changed, then put the focus back where it was.
+        Zone keepZone = zone;
+        int keepTop = topIdx, keepDock = dockIdx, keepGrid = gridIdx;
+        if (!r.dock.equals(dockApps)) {
+            dockApps.clear();
+            dockApps.addAll(r.dock);
+            buildDock();
+        } else {
+            refreshDockBanners();
+        }
+        if (!adapter.sameItems(r.grid)) adapter.setItems(r.grid);
+        else adapter.notifyDataSetChanged();   // rebind banners that may have been evicted
         if (r.dock.isEmpty() && r.grid.isEmpty()) {
             Toast.makeText(this, R.string.no_apps, Toast.LENGTH_LONG).show();
         }
-        if (first) restoreFocus(); else clampFocus();
+        if (first) {
+            restoreFocus();
+        } else {
+            zone = keepZone; topIdx = keepTop; dockIdx = keepDock; gridIdx = keepGrid;
+            clampFocus();
+        }
+    }
+
+    private void refreshDockBanners() {
+        for (int i = 0; i < dockTiles.size(); i++) {
+            final TileView t = dockTiles.get(i);
+            final int idx = i;
+            loader.load(dockApps.get(i), (a, bmp, accent) -> {
+                if (bmp != null) t.banner.setImageBitmap(bmp);
+                if (zone == Zone.DOCK && dockIdx == idx) glow.setColor(accent, true);
+            });
+        }
     }
 
     private void buildDock() {
@@ -408,12 +434,22 @@ public class HomeActivity extends Activity implements GridAdapter.Listener {
         if (!animate || h == 0) {
             header.setTranslationY(headerTo);
             grid.setTranslationY(gridTo);
+            glow.setAlpha(show ? 0f : 1f);
             if (!show) grid.setVisibility(View.INVISIBLE);
             return;
         }
         header.animate().translationY(headerTo).setDuration(340).setInterpolator(new DecelerateInterpolator(1.8f)).start();
+        glow.animate().alpha(show ? 0f : 1f).setDuration(300).start();
         grid.animate().translationY(gridTo).setDuration(340).setInterpolator(new DecelerateInterpolator(1.8f))
                 .withEndAction(() -> { if (!gridShown) grid.setVisibility(View.INVISIBLE); }).start();
+    }
+
+    private void syncGlowCenter() {
+        dockName.getLocationInWindow(locA);
+        root.getLocationInWindow(locB);
+        // Centre on the name, slightly below it so the band's top edge sits inside the glow.
+        glow.setCenter(locA[0] - locB[0] + dockName.getWidth() / 2f - header.getTranslationX(),
+                locA[1] - locB[1] + dockName.getHeight() * 0.9f - header.getTranslationY());
     }
 
     // ------------------------------------------------------------------ highlight
@@ -466,7 +502,10 @@ public class HomeActivity extends Activity implements GridAdapter.Listener {
             if (adapter.getItemCount() == 0) { zone = Zone.DOCK; showGrid(false, true); focusDock(0); }
             else focusGrid(gridIdx);
         } else if (zone == Zone.DOCK) {
-            focusDock(dockIdx);
+            if (dockTiles.isEmpty()) { zone = Zone.TOP; focusTop(topIdx); }
+            else { dockIdx = clamp(dockIdx, 0, dockTiles.size() - 1); focusDock(dockIdx); }
+        } else {
+            focusTop(clamp(topIdx, 0, pills.length - 1));
         }
     }
 
@@ -559,12 +598,14 @@ public class HomeActivity extends Activity implements GridAdapter.Listener {
 
     private final BroadcastReceiver packageReceiver = new BroadcastReceiver() {
         @Override public void onReceive(Context c, Intent i) {
+            String pkg = i.getData() == null ? null : i.getData().getSchemeSpecificPart();
+            if (pkg != null) loader.evict(pkg); else loader.clear();
             main.removeCallbacks(reload);
-            main.postDelayed(reload, 600);
+            main.postDelayed(reload, 800);
         }
     };
 
-    private final Runnable reload = () -> { loader.clear(); loadApps(); };
+    private final Runnable reload = this::loadApps;
 
     private static IntentFilter packageFilter() {
         IntentFilter f = new IntentFilter();

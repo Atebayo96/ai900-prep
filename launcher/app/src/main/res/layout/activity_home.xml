@@ -27,6 +27,12 @@
         android:background="#000000"
         android:visibility="gone" />
 
+    <!-- Ambient glow behind the dock app name; centre is set from the name's position. -->
+    <net.cleanhome.launcher.GlowView
+        android:id="@+id/glow"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <!-- ============ HEADER (home state) ============ -->
     <LinearLayout
         android:id="@+id/header"
@@ -109,11 +115,6 @@
             android:layout_height="0dp"
             android:layout_weight="1">
 
-            <net.cleanhome.launcher.GlowView
-                android:id="@+id/glow"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
-
             <TextView
                 android:id="@+id/dock_name"
                 android:layout_width="wrap_content"
@@ -156,7 +157,7 @@
     <!-- The one glass highlight. Drawn above everything, moved by code. -->
     <net.cleanhome.launcher.HighlightView
         android:id="@+id/highlight"
-        android:layout_width="10dp"
-        android:layout_height="10dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:visibility="invisible" />
 </FrameLayout>

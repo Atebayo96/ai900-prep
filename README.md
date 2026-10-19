@@ -137,7 +137,10 @@ The build script finds (or downloads) an Android SDK, reads the TV's SDK level a
 permission the Wi-Fi name needs, lists every app that claims HOME, sets ours with
 `cmd package set-home-activity`, presses HOME, takes a screenshot and checks the resumed activity.
 
-Only after that is verified does `--disable-stock` disable the other HOME apps. On Google TV the
+On most TVs the stock home still appears at this point: it declares its HOME intent filter with a
+higher priority than any third-party launcher can, and Android starts the highest priority home
+before it consults the default. That is why `--disable-stock` exists: it disables the other HOME
+apps one at a time, pressing HOME and taking a screenshot after each. On Google TV the
 setup wizard `com.google.android.tungsten.setupwraith` takes over HOME once the stock launcher is
 disabled; the script notices, offers to disable it too and records it for `restore.sh`.
 See `examples/google-tv.md`.

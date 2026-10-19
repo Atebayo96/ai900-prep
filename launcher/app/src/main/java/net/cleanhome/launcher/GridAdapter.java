@@ -40,6 +40,7 @@ public class GridAdapter extends RecyclerView.Adapter<GridAdapter.Holder> {
     }
 
     public AppEntry get(int i) { return items.get(i); }
+    public boolean sameItems(List<AppEntry> list) { return items.equals(list); }
     @Override public int getItemCount() { return items.size(); }
     @Override public long getItemId(int position) { return items.get(position).component.hashCode(); }
 

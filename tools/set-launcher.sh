@@ -43,9 +43,10 @@ if [ "$HOME_ONLY" != 1 ]; then
   "$TV" shell "appops set $PKG FINE_LOCATION allow" >/dev/null 2>&1 || true
 fi
 
-echo "== Apps that claim HOME"
-HOMES="$("$TV" shell "cmd package query-activities -a android.intent.action.MAIN -c android.intent.category.HOME" | grep -oE '[A-Za-z0-9_.]+/[A-Za-z0-9_.$]+' | sort -u || true)"
-echo "$HOMES" | sed 's/^/  /'
+echo "== Apps that claim HOME (Android starts the highest priority one; equal priority -> the default)"
+QA="$("$TV" shell "cmd package query-activities -a android.intent.action.MAIN -c android.intent.category.HOME" | tr -d '\r')"
+echo "$QA" | grep -oE 'priority=-?[0-9]+|[A-Za-z0-9_.]+/[A-Za-z0-9_.$]+' | paste -d' ' - - | awk '{print "  " $2 "  (" $1 ")"}' || true
+HOMES="$(echo "$QA" | grep -oE '[A-Za-z0-9_.]+/[A-Za-z0-9_.$]+' | sort -u || true)"
 
 echo "== Setting default home to $ACT"
 "$TV" shell "cmd package set-home-activity --user 0 $ACT" || "$TV" shell "cmd package set-home-activity $ACT"
@@ -56,7 +57,17 @@ SHOT="$ROOT/screens/home-$(date +%Y%m%d-%H%M%S).png"
 RESUMED="$("$TV" shell "dumpsys activity activities | grep -E 'mResumedActivity|ResumedActivity' | head -1" | tr -d '\r' || true)"
 echo "Resumed: $RESUMED"
 echo "Screenshot: $SHOT"
-if echo "$RESUMED" | grep -q "$PKG"; then echo "OK: the new launcher is on screen."; else echo "!! Something else is on screen. Check the screenshot before disabling anything."; fi
+if echo "$RESUMED" | grep -q "$PKG"; then
+  echo "OK: the new launcher is on screen."
+else
+  cat <<MSG
+The stock launcher is still on screen. That is expected on most TVs: the stock home declares its
+HOME intent filter with a higher priority (see the list above), and Android starts the highest
+priority home before it looks at the default you just set. The new launcher only takes over once
+the stock one is disabled: re-run with --disable-stock (it asks per package, screenshots after each
+one, and records everything for restore.sh).
+MSG
+fi
 
 if [ "$DISABLE" = 1 ]; then
   echo "== Disabling other HOME apps (never the setup wizard first)"

@@ -68,6 +68,11 @@ public final class BannerLoader {
         accents.evictAll();
     }
 
+    public void evict(String packageName) {
+        bitmaps.remove(packageName);
+        accents.remove(packageName);
+    }
+
     private Bitmap render(AppEntry app) {
         Drawable d = null;
         try {
