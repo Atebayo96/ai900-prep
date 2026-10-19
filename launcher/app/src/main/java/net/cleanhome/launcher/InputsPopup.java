@@ -66,7 +66,11 @@ public final class InputsPopup {
             t.setOnClickListener(v -> { popup.dismiss(); e.action.run(); });
             list.addView(t);
         }
-        int xoff = anchor.getWidth() - popup.getWidth();
+        // Left-align under the pill; fall back to right-aligning if it would leave the screen.
+        int[] loc = new int[2];
+        anchor.getLocationOnScreen(loc);
+        int screenW = act.getResources().getDisplayMetrics().widthPixels;
+        int xoff = (loc[0] + popup.getWidth() > screenW - 24) ? anchor.getWidth() - popup.getWidth() : 0;
         int yoff = (int) (8 * act.getResources().getDisplayMetrics().density);
         popup.showAsDropDown(anchor, xoff, yoff);
         if (list.getChildCount() > 0) list.getChildAt(0).requestFocus();

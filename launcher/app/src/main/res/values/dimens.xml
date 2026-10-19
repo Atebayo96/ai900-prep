@@ -14,21 +14,21 @@
     <dimen name="pill_text">15sp</dimen>
 
     <dimen name="dock_name_size">44sp</dimen>
-    <dimen name="dock_tile_w">196dp</dimen>
-    <dimen name="dock_tile_h">110dp</dimen>
-    <dimen name="dock_tile_gap">18dp</dimen>
+    <dimen name="dock_tile_w">176dp</dimen>
+    <dimen name="dock_tile_h">99dp</dimen>
+    <dimen name="dock_tile_gap">30dp</dimen>
     <dimen name="dock_band_padding">22dp</dimen>
     <dimen name="dock_band_radius">26dp</dimen>
     <dimen name="dock_bottom_margin">40dp</dimen>
 
-    <dimen name="grid_tile_w">196dp</dimen>
-    <dimen name="grid_tile_h">110dp</dimen>
-    <dimen name="grid_gap">18dp</dimen>
+    <dimen name="grid_tile_w">176dp</dimen>
+    <dimen name="grid_tile_h">99dp</dimen>
+    <dimen name="grid_gap">30dp</dimen>
     <dimen name="grid_top_padding">64dp</dimen>
     <dimen name="tile_radius">12dp</dimen>
     <dimen name="tile_label_size">15sp</dimen>
     <dimen name="tile_label_height">26dp</dimen>
 
-    <dimen name="popup_width">260dp</dimen>
+    <dimen name="popup_width">220dp</dimen>
     <dimen name="popup_item_height">44dp</dimen>
 </resources>

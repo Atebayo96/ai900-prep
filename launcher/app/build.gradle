@@ -19,6 +19,9 @@ android {
     buildTypes {
         debug {
             minifyEnabled false
+            // Test aid: -PappIdSuffix=.dummy1 builds a copy under another package name
+            // (used to fill an emulator's app grid). Not for normal builds.
+            if (project.hasProperty('appIdSuffix')) applicationIdSuffix project.appIdSuffix
         }
         release {
             // A release build is optional; the debug build is what the scripts install.
