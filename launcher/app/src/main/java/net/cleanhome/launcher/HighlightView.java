@@ -26,6 +26,7 @@ public class HighlightView extends View {
     private float pad; // highlight sits this far outside the tile
     private final SpringAnimation sx, sy, sw, sh;
     private boolean placed = false;
+    private float tx, ty, tw, th; // current spring targets, to avoid re-arming every frame
 
     public HighlightView(Context c, AttributeSet a) {
         super(c, a);
@@ -62,6 +63,11 @@ public class HighlightView extends View {
     /** Move to a rectangle in the parent's coordinates (left, top, width, height). */
     public void moveTo(float left, float top, float width, float height, boolean animate) {
         float nx = left - pad, ny = top - pad, nw = width + 2 * pad, nh = height + 2 * pad;
+        if (placed && Math.abs(nx - tx) < 0.5f && Math.abs(ny - ty) < 0.5f
+                && Math.abs(nw - tw) < 0.5f && Math.abs(nh - th) < 0.5f) {
+            return; // same target as last time: nothing to do (keeps the pre-draw hook idle)
+        }
+        tx = nx; ty = ny; tw = nw; th = nh;
         if (!placed || !animate) {
             sx.cancel(); sy.cancel(); sw.cancel(); sh.cancel();
             x = nx; y = ny; w = nw; h = nh;

@@ -139,7 +139,7 @@ public class HomeActivity extends Activity implements GridAdapter.Listener {
 
         setupWallpaper();
         root.getViewTreeObserver().addOnPreDrawListener(preDraw);
-        registerReceiver(packageReceiver, packageFilter());
+        register(packageReceiver, packageFilter());
         loadApps();
     }
 
@@ -147,7 +147,7 @@ public class HomeActivity extends Activity implements GridAdapter.Listener {
         super.onResume();
         resumed = true;
         updateClock();
-        registerReceiver(tickReceiver, tickFilter());
+        register(tickReceiver, tickFilter());
         registerNetwork();
     }
 
@@ -269,7 +269,8 @@ public class HomeActivity extends Activity implements GridAdapter.Listener {
             case KeyEvent.KEYCODE_DPAD_LEFT:  move(-1, 0); return true;
             case KeyEvent.KEYCODE_DPAD_RIGHT: move(1, 0);  return true;
             case KeyEvent.KEYCODE_BACK:
-                if (gridShown) { move(0, -1 * 1000); }
+                if (gridShown) move(0, -1000);
+                else if (zone == Zone.TOP && !dockTiles.isEmpty()) { zone = Zone.DOCK; focusDock(dockIdx); }
                 return true; // a home screen never finishes on Back
             case KeyEvent.KEYCODE_MENU: {
                 View f = getCurrentFocus();
@@ -345,7 +346,7 @@ public class HomeActivity extends Activity implements GridAdapter.Listener {
     private void focusGridAttempt(final int i, final int attempt) {
         View v = gridLm.findViewByPosition(i);
         if (v == null) {
-            if (attempt == 0) gridLm.scrollToPositionWithOffset(i, grid.getPaddingTop());
+            if (attempt == 0) gridLm.scrollToPositionWithOffset(i, 0);
             if (attempt < 12) main.postDelayed(() -> focusGridAttempt(i, attempt + 1), 16);
             return;
         }
@@ -573,6 +574,12 @@ public class HomeActivity extends Activity implements GridAdapter.Listener {
         f.addAction(Intent.ACTION_PACKAGE_REPLACED);
         f.addDataScheme("package");
         return f;
+    }
+
+    private void register(BroadcastReceiver r, IntentFilter f) {
+        // All of these are protected system broadcasts; Android 13+ still wants an export flag.
+        if (Build.VERSION.SDK_INT >= 33) registerReceiver(r, f, Context.RECEIVER_NOT_EXPORTED);
+        else registerReceiver(r, f);
     }
 
     private void unregisterQuietly(BroadcastReceiver r) {
